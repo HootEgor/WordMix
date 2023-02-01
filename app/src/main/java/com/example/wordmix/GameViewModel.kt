@@ -178,11 +178,6 @@ class GameViewModel: ViewModel() {
     fun pressTile(tile: Tile) {
         if (!tile.blocked) {
             val newTile = tile.copy(pressed = !tile.pressed)
-            if (newTile.pressed) {
-                counter++
-            } else {
-                counter--
-            }
             updateTile(newTile)
         }
     }
@@ -192,10 +187,13 @@ class GameViewModel: ViewModel() {
     }
 
     private fun updateTile(tile: Tile) {
+        if (tile.pressed) {
+            counter++
+        } else {
+            counter--
+        }
         allTiles[tile.row][tile.column] = tile
-        val newList: ArrayList<ArrayList<Tile>> = arrayListOf()
-        newList.addAll(allTiles)
-        _uiState.value = _uiState.value.copy(allTiles = newList, pressedCounter = counter)
+        _uiState.value = _uiState.value.copy(pressedCounter = counter)
     }
 
 }
