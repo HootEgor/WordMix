@@ -1,6 +1,8 @@
 package com.example.wordmix.ui.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 data class Tile(
     var row: Int,
@@ -18,6 +20,12 @@ data class Tile(
 fun Tile.color(): Color {
     return if(blocked) Color.Green
     else if (pressed) Color.Blue else Color.Yellow
+}
+
+fun Tile.border():BorderStroke{
+    return if(blocked) BorderStroke(2.dp, Color.Green)
+    else if(allowed) BorderStroke(2.dp, Color.Black)
+    else BorderStroke(2.dp, color())
 }
 
 

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.android.unscramble.ui.Cell
-import com.example.android.unscramble.ui.CellBlocked
 import com.example.android.unscramble.ui.GameScreen
 import com.example.wordmix.data.allWords
 import com.example.wordmix.ui.theme.Direction
@@ -27,23 +26,77 @@ class GameViewModel: ViewModel() {
         get() = _uiState.value.allTiles ?: arrayListOf()
 
     private val directions = arrayOf(Direction(-1,0), Direction(1,0),
-                                    Direction(0,-1), Direction(0,1))
+        Direction(0,-1), Direction(0,1))
     private var stack = ArrayDeque<Tile>()
     private var currentWord: String = ""
     var words: ArrayList<String> = ArrayList()
+    private var stackTile = ArrayDeque<Tile>()
+    private val guessedWords: ArrayList<ArrayList<Tile>> = ArrayList<ArrayList<Tile>>()
 
     private var counter = 0
 
     init {
-        resetGame()
+        restartGame()
     }
 
-    fun resetGame() {
-        counter = 0
-        words.clear()
-        createTiles()
-        updateState()
+    fun restartGame() {
+        if(allTiles != null){
+            counter = 0
+            stackTile.clear()
+            words.clear()
+            createTiles()
+            updateState()
+        }
     }
+
+    fun resetGame(){
+        counter = 0
+        stackTile.clear()
+        for(row in allTiles){
+            for(tile in row){
+                val newTile = tile.copy(blocked = false)
+                newTile.let{
+                    it.allowed = true
+                    it.blocked = false
+                    it.pressed = false
+                }
+                updateTile(newTile)
+            }
+        }
+    }
+
+    fun unBlockWord(tile: Tile){
+        val wordLocation = findGuessedWord(tile)
+        Log.d("EEE", "${guessedWords.size}")
+        Log.d("EEE", "$wordLocation")
+        if (wordLocation != null){
+
+            for(t in wordLocation){
+                val newTile = t.copy(blocked = false, pressed = false)
+                updateTile(newTile)
+            }
+
+            guessedWords.remove(wordLocation)
+        }
+        editMode(false)
+
+    }
+
+    fun findGuessedWord(tile: Tile): ArrayList<Tile>? {
+        for(row in guessedWords){
+            for(t in row){
+                if(getTile(tile.row, tile.column) == getTile(t.row, t.column)){
+                    return row
+                }
+            }
+        }
+        return null
+    }
+
+    fun editMode(value: Boolean){
+        _uiState.value = _uiState.value.copy(editMode = value)
+    }
+
 
     private fun createTiles() {
         val uiState = _uiState.value
@@ -57,11 +110,9 @@ class GameViewModel: ViewModel() {
         }
         _uiState.value = GameUiState(allTiles = emptyTiles)
         fillTiles()
-        //block(0,1)
     }
 
     private fun fillTiles(){
-        //val copyList = _uiState.value.allTiles
         for(i in 0 until _uiState.value.rows){
             for(j in 0 until _uiState.value.columns){
                 if(freeTile(i,j)){
@@ -78,12 +129,8 @@ class GameViewModel: ViewModel() {
                     it.blocked = false
                     it.pressed = false
                 }
-//                copyList?.get(i)?.get(j)?.allowed = true
-//                copyList?.get(i)?.get(j)?.blocked = false
-//                copyList?.get(i)?.get(j)?.pressed = false
             }
         }
-        //_uiState.value = _uiState.value.copy(allTiles = copyList)
     }
 
     private fun pickRandomWord(): String {
@@ -102,13 +149,13 @@ class GameViewModel: ViewModel() {
         val uiState = _uiState.value
         var tile = Tile(row, column, uiState.size, currentWord[0].toString())
         stack.push(tile)
-        inputLetter(row, column, 1)
+        inputLetter(1)
 
         return !stack.isEmpty()
 
     }
 
-    private fun inputLetter(row: Int, column: Int, index: Int): Boolean{
+    private fun inputLetter(index: Int): Boolean{
         val uiState = _uiState.value
 
         var tile: Tile? = null
@@ -128,7 +175,7 @@ class GameViewModel: ViewModel() {
                 tile = Tile(newRow, newColumn, uiState.size, letter)
                 stack.push(tile)
                 if(stack.size < currentWord.length){
-                    if(inputLetter(newRow,newColumn,index+1))
+                    if(inputLetter(index+1))
                         return true
                 }
                 else
@@ -157,34 +204,106 @@ class GameViewModel: ViewModel() {
             return true
         }
 
+        return false
+    }
 
+    private fun directionExist(direction: Direction): Boolean{
+        val uiState = _uiState.value
+        if(direction.row < 0 || direction.column < 0 || direction.row >= uiState.rows || direction.column >= uiState.columns)
+            return false
 
+        return true
+    }
+
+    fun stackWord():String{
+        var wordInStack = ""
+        for(tile in stackTile){
+            wordInStack+=tile.text
+        }
+        wordInStack = wordInStack.reversed()
+        return wordInStack
+    }
+
+    fun guessWord(){
+
+        if(words.contains(stackWord())){
+            val row = ArrayList<Tile>()
+            for(tile in stackTile){
+                row.add(tile)
+                val newTile = tile.copy(blocked = true)
+                updateTile(newTile)
+            }
+            guessedWords.add(row)
+            stackTile.clear()
+            setAllowAllTiles(true)
+        }
+
+    }
+
+    fun pressTile(tile: Tile) {
+        if (!tile.blocked) {
+            if(tile.allowed){
+                val newTile = tile.copy(pressed = !tile.pressed)
+                updateTile(newTile)
+
+                if(tileInStack(tile))
+                    stackTile.pop()
+                else
+                    stackTile.push(newTile)
+
+                if (!stackTile.isEmpty()){
+                    setAllowAllTiles(false)
+                    setAllowed(getFromStack(stackTile.peek()))
+                }
+                else
+                    setAllowAllTiles(true)
+
+                guessWord()
+            }
+        }
+    }
+
+    fun tileInStack(tile: Tile):Boolean{
+        for(t in stackTile){
+            if(t.row == tile.row && t.column == tile.column)
+                return true
+        }
 
         return false
     }
 
-//    fun block(row:Int, column: Int){
-//        val copyList = _uiState.value.allTiles
-//        copyList?.get(row)?.get(column)?.blocked = !copyList?.get(row)?.get(column)?.blocked!!
-//        //copyList?.get(row)?.get(column)?.text = "W"
-//        Log.d("EEE", "blocked $row : $column")
-//        _uiState.value = _uiState.value.copy(allTiles = copyList)
-//
-//    }
+    fun getFromStack(tile: Tile): Tile{
+        return getTile(tile.row, tile.column)
+    }
 
-//    fun press(row:Int, column: Int){
-//        val copyList = _uiState.value.allTiles
-//        copyList?.get(row)?.get(column)?.pressed = !copyList?.get(row)?.get(column)?.pressed!!
-//        var p = copyList?.get(row)?.get(column)?.pressed
-//        Log.d("EEE", "pressed $p")
-//        _uiState.value = _uiState.value.copy(allTiles = copyList)
-//        //_uiState.value = GameUiState(allTiles = copyList)
-//    }
+    fun setAllowed(pressedTile: Tile){
+        val newPress = pressedTile.copy(allowed = true)
+        updateTile(newPress)
+        for(dir in directions){
+            val newDir = addDirection(pressedTile,dir)
+            if(directionExist(newDir)){
+                var allowedTile = getTile(newDir.row,newDir.column)
+                if(!tileInStack(allowedTile))
+                {
+                    allowedTile = getTile(newDir.row,newDir.column).copy(allowed = true)
+                    updateTile(allowedTile)
+                }
+            }
+        }
+    }
 
-    fun pressTile(tile: Tile) {
-        if (!tile.blocked) {
-            val newTile = tile.copy(pressed = !tile.pressed)
-            updateTile(newTile)
+    fun addDirection(tile: Tile, direction: Direction):Direction{
+        return Direction(direction.row + tile.row, direction.column + tile.column)
+    }
+
+    fun setAllowAllTiles(allowed: Boolean){
+        for(row in allTiles){
+            for(tile in row){
+                if(!tile.blocked){
+                    val newTile = tile.copy(allowed = allowed)
+                    updateTile(newTile)
+                }
+            }
         }
     }
 

@@ -7,11 +7,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.Tile
+import com.example.wordmix.ui.theme.border
 import com.example.wordmix.ui.theme.color
 
 @Composable
@@ -20,16 +24,22 @@ fun GameScreen(
     viewModel: GameViewModel = viewModel()
 ) {
     val gameUiState by viewModel._uiState
-    //val list by remember { mutableStateOf(gameViewModel.allTiles) }
-    //Log.d("EEE", "game")
-
-    //Text(text = "Selected tiles counter: ${gameUiState.pressedCounter}", modifier = Modifier.size(18.dp))
 
     Column(modifier = Modifier
         .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally)
     {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.05f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ){
+            Text(text  = viewModel.stackWord(),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center)
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -41,22 +51,38 @@ fun GameScreen(
             for (i in 0 until gameUiState.rows) {
                 Row{
                     for (j in 0 until gameUiState.columns) {
-                        viewModel.getTile(i, j).let{
-                            Cell(tile = it,
-                                press = { viewModel.pressTile(it) })
+                        if(!gameUiState.editMode){
+                            viewModel.getTile(i, j).let{
+                                Cell(tile = it,
+                                    press = { viewModel.pressTile(it) })
+                            }
+                        } else{
+                            viewModel.getTile(i, j).let{
+                                Cell(tile = it,
+                                    press = { viewModel.unBlockWord(it) })
+                            }
                         }
+
                     }
                 }
             }
         }
 
-        Button(
-            onClick = { if(gameUiState.allTiles != null) viewModel.resetGame()},
-            colors= ButtonDefaults.buttonColors(backgroundColor = Color.Green),
-            modifier = Modifier.size(100.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ){
-            Text(viewModel.words.size.toString())
+            CustomButton(text = "Restart",
+                        press = { viewModel.restartGame()})
+            CustomButton(text = "Reset",
+                        press = { viewModel.resetGame()})
+            CustomButton(text = "Edit",
+                        press = { viewModel.editMode(true)})
+
         }
+
 
     }
 
@@ -68,10 +94,12 @@ fun Cell(
     press: () -> Unit
 ){
     val color = tile.color()
+    val border = tile.border()
 
     Button(
         onClick = press,
         colors= ButtonDefaults.buttonColors(backgroundColor = color),
+        border = border,
         modifier = Modifier.size(tile.size.dp)
     ){
         Text(tile.text)
@@ -79,13 +107,16 @@ fun Cell(
 }
 
 @Composable
-fun CellBlocked(tile: Tile){
+fun CustomButton(
+    text: String,
+    press: () -> Unit
+){
     Button(
-        onClick = {},
-        colors= ButtonDefaults.buttonColors(backgroundColor = Color.Black),
-        modifier = Modifier.size(tile.size.dp)
+        onClick = press,
+        colors= ButtonDefaults.buttonColors(backgroundColor = Color.Green),
+        modifier = Modifier.size(100.dp)
     ){
-        Text(tile.text)
+        Text(text = text)
     }
 }
 
