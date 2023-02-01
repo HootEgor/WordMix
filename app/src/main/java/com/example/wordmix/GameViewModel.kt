@@ -42,25 +42,26 @@ class GameViewModel: ViewModel() {
         counter = 0
         words.clear()
         createTiles()
+        updateState()
     }
 
-    fun createTiles() {
+    private fun createTiles() {
         val uiState = _uiState.value
-        var allTiles = ArrayList<ArrayList<Tile>>()
+        val emptyTiles = ArrayList<ArrayList<Tile>>()
         for (i in 0 until uiState.rows) {
-            var row = ArrayList<Tile>()
+            val row = ArrayList<Tile>()
             for (j in 0 until uiState.columns) {
                 row.add(Tile(i, j, uiState.size, uiState.defaultText))
             }
-            allTiles.add(row)
+            emptyTiles.add(row)
         }
-        _uiState.value = GameUiState(allTiles = allTiles)
+        _uiState.value = GameUiState(allTiles = emptyTiles)
         fillTiles()
         //block(0,1)
     }
 
-    fun fillTiles(){
-        val copyList = _uiState.value.allTiles
+    private fun fillTiles(){
+        //val copyList = _uiState.value.allTiles
         for(i in 0 until _uiState.value.rows){
             for(j in 0 until _uiState.value.columns){
                 if(freeTile(i,j)){
@@ -68,16 +69,21 @@ class GameViewModel: ViewModel() {
                         words.add(currentWord)
                         for (tile in stack)
                         {
-                            copyList?.get(tile.row)?.get(tile.column)?.text = tile.text
+                            getTile(tile.row, tile.column).text = tile.text
                         }
                     }
                 }
-                copyList?.get(i)?.get(j)?.allowed = true
-                copyList?.get(i)?.get(j)?.blocked = false
-                copyList?.get(i)?.get(j)?.pressed = false
+                getTile(i, j).let {
+                    it.allowed = true
+                    it.blocked = false
+                    it.pressed = false
+                }
+//                copyList?.get(i)?.get(j)?.allowed = true
+//                copyList?.get(i)?.get(j)?.blocked = false
+//                copyList?.get(i)?.get(j)?.pressed = false
             }
         }
-        _uiState.value = _uiState.value.copy(allTiles = copyList)
+        //_uiState.value = _uiState.value.copy(allTiles = copyList)
     }
 
     private fun pickRandomWord(): String {
@@ -90,7 +96,7 @@ class GameViewModel: ViewModel() {
         }
     }
 
-    fun inputWord(row: Int, column: Int):Boolean{
+    private fun inputWord(row: Int, column: Int):Boolean{
         currentWord = pickRandomWord()
         stack.clear()
         val uiState = _uiState.value
@@ -102,7 +108,7 @@ class GameViewModel: ViewModel() {
 
     }
 
-    fun inputLetter(row: Int, column: Int, index: Int): Boolean{
+    private fun inputLetter(row: Int, column: Int, index: Int): Boolean{
         val uiState = _uiState.value
 
         var tile: Tile? = null
@@ -137,7 +143,7 @@ class GameViewModel: ViewModel() {
 
     }
 
-    fun freeTile(row: Int, column: Int): Boolean {
+    private fun freeTile(row: Int, column: Int): Boolean {
         val uiState = _uiState.value
         if(row < 0 || column < 0 || row >= uiState.rows || column >= uiState.columns)
             return false
@@ -193,6 +199,10 @@ class GameViewModel: ViewModel() {
             counter--
         }
         allTiles[tile.row][tile.column] = tile
+        updateState()
+    }
+
+    private fun updateState() {
         _uiState.value = _uiState.value.copy(pressedCounter = counter)
     }
 
