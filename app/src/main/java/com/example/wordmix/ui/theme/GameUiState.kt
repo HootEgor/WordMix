@@ -8,4 +8,5 @@ data class GameUiState(
     var size: Int = 50,
     var defaultText: String = "-1",
     var allTiles: ArrayList<ArrayList<Tile>>? = null,
+    val pressedCounter: Int = 0
 )

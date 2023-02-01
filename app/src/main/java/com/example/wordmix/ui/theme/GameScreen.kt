@@ -12,15 +12,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.Tile
+import com.example.wordmix.ui.theme.color
 
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
-    gameViewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel()
 ) {
-    val gameUiState by gameViewModel._uiState
+    val gameUiState by viewModel._uiState
     //val list by remember { mutableStateOf(gameViewModel.allTiles) }
-    Log.d("EEE", "game")
+    //Log.d("EEE", "game")
+
+    //Text(text = "Selected tiles counter: ${gameUiState.pressedCounter}", modifier = Modifier.size(18.dp))
 
     Column(modifier = Modifier
         .fillMaxSize(),
@@ -29,7 +32,8 @@ fun GameScreen(
     {
         Column(
             modifier = Modifier
-                .fillMaxWidth().fillMaxHeight(0.8f),
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
@@ -37,28 +41,21 @@ fun GameScreen(
             for (i in 0 until gameUiState.rows) {
                 Row{
                     for (j in 0 until gameUiState.columns) {
-                        var tile = gameUiState.allTiles?.get(i)?.get(j)
-                        //var tile = list?.get(i)?.get(j)
-                        if (tile != null) {
-                            if(!tile.blocked){
-                                Cell(tile = tile,
-                                    press = {gameViewModel.block(tile.row, tile.column)})
-                            }
-                            else
-                                CellBlocked(tile)
+                        viewModel.getTile(i, j).let{
+                            Cell(tile = it,
+                                press = { viewModel.pressTile(it) })
                         }
-
                     }
                 }
             }
         }
 
         Button(
-            onClick = { if(gameUiState.allTiles != null) gameViewModel.resetGame()},
+            onClick = { if(gameUiState.allTiles != null) viewModel.resetGame()},
             colors= ButtonDefaults.buttonColors(backgroundColor = Color.Green),
             modifier = Modifier.size(100.dp)
         ){
-            Text(gameViewModel.words.size.toString())
+            Text(viewModel.words.size.toString())
         }
 
     }
@@ -70,19 +67,10 @@ fun Cell(
     tile: Tile,
     press: () -> Unit
 ){
-    var selected by remember { mutableStateOf(false) }
-    val color = if(tile.blocked) Color.Green
-                else if (selected) Color.Blue else Color.Yellow
-    var p = tile.blocked
-
+    val color = tile.color()
 
     Button(
-        onClick = {
-            Log.d("EEE", "$p")
-            selected = !selected
-            if(tile.allowed)
-                press()
-            },
+        onClick = press,
         colors= ButtonDefaults.buttonColors(backgroundColor = color),
         modifier = Modifier.size(tile.size.dp)
     ){

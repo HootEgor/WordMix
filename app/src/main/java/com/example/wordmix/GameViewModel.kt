@@ -23,17 +23,23 @@ class GameViewModel: ViewModel() {
         private set
     //val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
+    private val allTiles: ArrayList<ArrayList<Tile>>
+        get() = _uiState.value.allTiles ?: arrayListOf()
+
     private val directions = arrayOf(Direction(-1,0), Direction(1,0),
                                     Direction(0,-1), Direction(0,1))
     private var stack = ArrayDeque<Tile>()
     private var currentWord: String = ""
     var words: ArrayList<String> = ArrayList()
 
+    private var counter = 0
+
     init {
         resetGame()
     }
 
     fun resetGame() {
+        counter = 0
         words.clear()
         createTiles()
     }
@@ -151,23 +157,45 @@ class GameViewModel: ViewModel() {
         return false
     }
 
-    fun block(row:Int, column: Int){
-        val copyList = _uiState.value.allTiles
-        copyList?.get(row)?.get(column)?.blocked = !copyList?.get(row)?.get(column)?.blocked!!
-        //copyList?.get(row)?.get(column)?.text = "W"
-        Log.d("EEE", "blocked $row : $column")
-        _uiState.value = _uiState.value.copy(allTiles = copyList)
+//    fun block(row:Int, column: Int){
+//        val copyList = _uiState.value.allTiles
+//        copyList?.get(row)?.get(column)?.blocked = !copyList?.get(row)?.get(column)?.blocked!!
+//        //copyList?.get(row)?.get(column)?.text = "W"
+//        Log.d("EEE", "blocked $row : $column")
+//        _uiState.value = _uiState.value.copy(allTiles = copyList)
+//
+//    }
 
+//    fun press(row:Int, column: Int){
+//        val copyList = _uiState.value.allTiles
+//        copyList?.get(row)?.get(column)?.pressed = !copyList?.get(row)?.get(column)?.pressed!!
+//        var p = copyList?.get(row)?.get(column)?.pressed
+//        Log.d("EEE", "pressed $p")
+//        _uiState.value = _uiState.value.copy(allTiles = copyList)
+//        //_uiState.value = GameUiState(allTiles = copyList)
+//    }
+
+    fun pressTile(tile: Tile) {
+        if (!tile.blocked) {
+            val newTile = tile.copy(pressed = !tile.pressed)
+            if (newTile.pressed) {
+                counter++
+            } else {
+                counter--
+            }
+            updateTile(newTile)
+        }
     }
 
-    fun press(row:Int, column: Int){
-        val copyList = _uiState.value.allTiles
-        copyList?.get(row)?.get(column)?.pressed = !copyList?.get(row)?.get(column)?.pressed!!
-        var p = copyList?.get(row)?.get(column)?.pressed
-        Log.d("EEE", "pressed $p")
-        _uiState.value = _uiState.value.copy(allTiles = copyList)
-        //_uiState.value = GameUiState(allTiles = copyList)
+    fun getTile(row: Int, column: Int): Tile {
+        return allTiles[row][column]
     }
 
+    private fun updateTile(tile: Tile) {
+        allTiles[tile.row][tile.column] = tile
+        val newList: ArrayList<ArrayList<Tile>> = arrayListOf()
+        newList.addAll(allTiles)
+        _uiState.value = _uiState.value.copy(allTiles = newList, pressedCounter = counter)
+    }
 
 }

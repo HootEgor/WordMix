@@ -1,5 +1,7 @@
 package com.example.wordmix.ui.theme
 
+import androidx.compose.ui.graphics.Color
+
 data class Tile(
     var row: Int,
     var column: Int,
@@ -13,6 +15,9 @@ data class Tile(
             : this(row = row, column = column, size = size, text = text, true, false, false)
 }
 
-
+fun Tile.color(): Color {
+    return if(blocked) Color.Green
+    else if (pressed) Color.Blue else Color.Yellow
+}
 
 
