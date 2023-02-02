@@ -4,10 +4,14 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.wordmix.data.allWords
 import com.example.wordmix.ui.theme.Direction
 import com.example.wordmix.ui.theme.GameUiState
 import com.example.wordmix.ui.theme.Tile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -15,7 +19,7 @@ class GameViewModel: ViewModel() {
 
     var _uiState = mutableStateOf(GameUiState())
         private set
-    //val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+    private var synchronize = false
 
     private val allTiles: ArrayList<ArrayList<Tile>>
         get() = _uiState.value.allTiles ?: arrayListOf()
@@ -30,7 +34,9 @@ class GameViewModel: ViewModel() {
 
     private var counter = 0
     private val gradientFrom = 1.0f
-    private val gradientTo = 0.7f
+    private val gradientTo = 1.0f
+
+    private var score = 0;
 
     init {
         restartGame()
@@ -66,7 +72,7 @@ class GameViewModel: ViewModel() {
 
     fun unBlockWord(tile: Tile){
         val wordLocation = findGuessedWord(tile)
-        if (wordLocation != null){
+        if (wordLocation != null && score >= 150){
 
             for(t in wordLocation){
                 val newTile = t.copy(blocked = false, pressed = false)
@@ -74,6 +80,7 @@ class GameViewModel: ViewModel() {
             }
 
             guessedWords.remove(wordLocation)
+            score-=150
         }
         editMode()
     }
@@ -92,6 +99,14 @@ class GameViewModel: ViewModel() {
     fun editMode(){
         longPressTile()
         _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
+    }
+
+    fun guessNumber(): String{
+        return "${guessedWords.size}/${words.size}"
+    }
+
+    fun score(): String{
+        return "${score}"
     }
 
     fun randomColor(): Color{
@@ -132,7 +147,6 @@ class GameViewModel: ViewModel() {
             for(j in 0 until _uiState.value.columns){
                 if(freeTile(i,j)){
                     if(inputWord(i,j)){
-                        words.add(currentWord)
                         val color = randomColor()
                         val alphaGradient = linspace(gradientFrom,gradientTo,stack.size).reversed()
                         var i = 0
@@ -152,7 +166,7 @@ class GameViewModel: ViewModel() {
                 }
                 getTile(i, j).let {
                     it.allowed = true
-                    it.blocked = true
+                    it.blocked = false
                     it.pressed = false
                 }
             }
@@ -164,7 +178,7 @@ class GameViewModel: ViewModel() {
         if (words.contains(currentWord)) {
             return pickRandomWord()
         } else {
-            words.add(currentWord)
+            //
             return currentWord
         }
     }
@@ -183,8 +197,11 @@ class GameViewModel: ViewModel() {
             stack.push(tile)
             inputLetter(1)
 
-            if (!stack.isEmpty())
+            if (!stack.isEmpty()){
+                words.add(currentWord)
                 return true
+            }
+
 
         }
 
@@ -270,6 +287,8 @@ class GameViewModel: ViewModel() {
                 val newTile = tile.copy(blocked = true)
                 updateTile(newTile)
             }
+
+            score+=100
             guessedWords.add(row)
             stackTile.clear()
             setAllowAllTiles(true)
@@ -279,6 +298,17 @@ class GameViewModel: ViewModel() {
 
 
     fun pressTile(tile: Tile) {
+        if(synchronize)
+            return
+
+        synchronize = true
+            press(tile)
+        synchronize = false
+
+
+    }
+
+    fun press(tile: Tile){
         if (!tile.blocked) {
             if(tile.allowed){
                 val newTile = tile.copy(pressed = !tile.pressed)

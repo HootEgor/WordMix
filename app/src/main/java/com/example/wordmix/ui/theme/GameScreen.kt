@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,11 +37,14 @@ fun GameScreen(
     {
         Row(modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.05f),
+            .fillMaxHeight(0.07f),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.SpaceEvenly
         ){
-            Text(text  = viewModel.stackWord(),
+            Text(text  = viewModel.guessNumber(),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center)
+            Text(text  = viewModel.score(),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center)
         }
@@ -94,6 +98,7 @@ fun GameScreen(
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Cell(
     tile: Tile,
@@ -103,14 +108,20 @@ fun Cell(
     val color = tile.color()
     val border = tile.border()
 
-    Button(
-        onClick = press,
-        colors= ButtonDefaults.buttonColors(backgroundColor = color),
+    Surface(
+        color= color,
         border = border,
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier.size(tile.size.dp),
-        elevation = null
+
     ){
-        Text(text = tile.text.uppercase())
+        Text(text = tile.text.uppercase(),
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = press,
+                    onLongClick = longPress
+                ).wrapContentSize()
+        )
     }
 
 
@@ -123,6 +134,7 @@ fun CustomButton(
 ){
     Button(
         onClick = press,
+        shape = RoundedCornerShape(16.dp),
         colors= ButtonDefaults.buttonColors(backgroundColor = Color.Green),
         modifier = Modifier.size(100.dp)
     ){
