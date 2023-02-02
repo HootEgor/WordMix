@@ -302,7 +302,7 @@ class GameViewModel: ViewModel() {
             return
 
         synchronize = true
-            press(tile)
+        press(tile)
         synchronize = false
 
 
