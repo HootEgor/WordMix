@@ -1,12 +1,16 @@
 package com.example.android.unscramble.ui
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,12 +58,14 @@ fun GameScreen(
                         if(!gameUiState.editMode){
                             viewModel.getTile(i, j).let{
                                 Cell(tile = it,
-                                    press = { viewModel.pressTile(it) })
+                                    press = { viewModel.pressTile(it) },
+                                    longPress = { viewModel.longPressTile() })
                             }
                         } else{
                             viewModel.getTile(i, j).let{
                                 Cell(tile = it,
-                                    press = { viewModel.unBlockWord(it) })
+                                    press = { viewModel.unBlockWord(it) },
+                                    longPress = { viewModel.longPressTile() })
                             }
                         }
 
@@ -77,9 +83,9 @@ fun GameScreen(
             CustomButton(text = "Restart",
                         press = { viewModel.restartGame()})
             CustomButton(text = "Reset",
-                        press = { viewModel.resetGame()})
+                press = { viewModel.resetGame()})
             CustomButton(text = "Edit",
-                        press = { viewModel.editMode(true)})
+                        press = { viewModel.editMode()})
 
         }
 
@@ -91,7 +97,8 @@ fun GameScreen(
 @Composable
 fun Cell(
     tile: Tile,
-    press: () -> Unit
+    press: () -> Unit,
+    longPress:() -> Unit
 ){
     val color = tile.color()
     val border = tile.border()
@@ -100,10 +107,13 @@ fun Cell(
         onClick = press,
         colors= ButtonDefaults.buttonColors(backgroundColor = color),
         border = border,
-        modifier = Modifier.size(tile.size.dp)
+        modifier = Modifier.size(tile.size.dp),
+        elevation = null
     ){
-        Text(tile.text)
+        Text(text = tile.text.uppercase())
     }
+
+
 }
 
 @Composable
