@@ -26,10 +26,14 @@ fun Tile.color(): Color {
     else if (pressed) Color.Gray else Color.LightGray
 }
 
-fun Tile.border():BorderStroke{
-    return if(blocked) BorderStroke(2.dp, Color.DarkGray)
-    else if(allowed) BorderStroke(2.dp, Color.Black)
-    else BorderStroke(2.dp, color())
+fun Tile.border(pressedNum: Int):BorderStroke?{
+    val nullBorder = BorderStroke(2.dp, Color.White.copy(alpha = 0.0f))
+    return if(pressedNum == 0) nullBorder
+    else if(blocked) nullBorder
+    else if(allowed) BorderStroke(2.dp, Color.DarkGray)
+    else nullBorder
+
+
 }
 
 

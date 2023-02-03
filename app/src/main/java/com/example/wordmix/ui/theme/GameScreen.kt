@@ -31,8 +31,8 @@ fun GameScreen(
     val gameUiState by viewModel._uiState
 
     Column(modifier = Modifier
-        .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        .fillMaxSize().padding(top = 20.dp),
+        verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally)
     {
         Row(modifier = Modifier
@@ -45,6 +45,9 @@ fun GameScreen(
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center)
             Text(text  = viewModel.score(),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center)
+            Text(text  = viewModel.combo(),
                 fontSize = 24.sp,
                 textAlign = TextAlign.Center)
         }
@@ -62,12 +65,14 @@ fun GameScreen(
                         if(!gameUiState.editMode){
                             viewModel.getTile(i, j).let{
                                 Cell(tile = it,
+                                    pressedNum = viewModel.pressedNum,
                                     press = { viewModel.pressTile(it) },
                                     longPress = { viewModel.longPressTile() })
                             }
                         } else{
                             viewModel.getTile(i, j).let{
                                 Cell(tile = it,
+                                    pressedNum = viewModel.pressedNum,
                                     press = { viewModel.unBlockWord(it) },
                                     longPress = { viewModel.longPressTile() })
                             }
@@ -82,13 +87,13 @@ fun GameScreen(
             modifier = Modifier
                 .fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.SpaceEvenly
         ){
-            CustomButton(text = "Restart",
+            CustomButton(text = "Далі",
                         press = { viewModel.restartGame()})
-            CustomButton(text = "Reset",
-                press = { viewModel.resetGame()})
-            CustomButton(text = "Edit",
+//            CustomButton(text = "Reset",
+//                press = { viewModel.resetGame()})
+            CustomButton(text = "Відміна",
                         press = { viewModel.editMode()})
 
         }
@@ -102,11 +107,12 @@ fun GameScreen(
 @Composable
 fun Cell(
     tile: Tile,
+    pressedNum: Int,
     press: () -> Unit,
     longPress:() -> Unit
 ){
     val color = tile.color()
-    val border = tile.border()
+    val border = tile.border(pressedNum)
 
     Surface(
         color= color,
@@ -115,7 +121,8 @@ fun Cell(
         modifier = Modifier.size(tile.size.dp),
 
     ){
-        Text(text = tile.text.uppercase(),
+        Text(text = tile.text.lowercase(),
+            fontSize = 20.sp,
             modifier = Modifier
                 .combinedClickable(
                     onClick = press,

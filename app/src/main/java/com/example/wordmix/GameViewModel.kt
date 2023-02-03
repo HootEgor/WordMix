@@ -9,11 +9,10 @@ import com.example.wordmix.data.allWords
 import com.example.wordmix.ui.theme.Direction
 import com.example.wordmix.ui.theme.GameUiState
 import com.example.wordmix.ui.theme.Tile
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 class GameViewModel: ViewModel() {
 
@@ -33,10 +32,15 @@ class GameViewModel: ViewModel() {
     private val guessedWords: ArrayList<ArrayList<Tile>> = ArrayList<ArrayList<Tile>>()
 
     private var counter = 0
-    private val gradientFrom = 1.0f
-    private val gradientTo = 1.0f
+    private var isLongPressed = false
+    var pressedNum = 0
 
-    private var score = 0;
+    private val gradientFrom = 1.0f
+    private val gradientTo = 0.7f
+
+    private var score = 0
+    private var comboValue = 1.0f
+    private val point = 100.0f
 
     init {
         restartGame()
@@ -44,6 +48,7 @@ class GameViewModel: ViewModel() {
 
     fun restartGame() {
         if(allTiles != null){
+            pressedNum = 0
             counter = 0
             stackTile.clear()
             guessedWords.clear()
@@ -54,6 +59,7 @@ class GameViewModel: ViewModel() {
     }
 
     fun resetGame(){
+        pressedNum = 0
         counter = 0
         stackTile.clear()
         guessedWords.clear()
@@ -68,6 +74,23 @@ class GameViewModel: ViewModel() {
                 updateTile(newTile)
             }
         }
+    }
+
+    fun guessNumber(): String{
+        return "${guessedWords.size}/${words.size-1}"
+    }
+
+    fun score(): String{
+        return "${score}"
+    }
+
+    fun combo(): String{
+        return "+ ${(point*comboValue).toInt()}"
+    }
+
+    fun editMode(){
+        longPressTile()
+        _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
     }
 
     fun unBlockWord(tile: Tile){
@@ -85,6 +108,45 @@ class GameViewModel: ViewModel() {
         editMode()
     }
 
+
+
+    fun guessWord(){
+        val word = stackWord()
+        if(allWords.contains(word)){
+            val row = ArrayList<Tile>()
+            val color = randomColor()
+            val alphaGradient = linspace(gradientFrom,gradientTo,stackTile.size).reversed()
+            var i = 0
+            for(tile in stackTile){
+
+                row.add(tile)
+                val newTile = tile.copy(blocked = true)
+                newTile.let{
+                    it.colorValue = color
+                    it.alpha = alphaGradient[i]
+                }
+                updateTile(newTile)
+                i++
+            }
+
+            if(word.length == pressedNum && !isLongPressed){
+                score+= (point*comboValue).toInt()
+                comboValue+=0.1f
+            }
+            else{
+                comboValue = 1.0f
+                score+= (point).toInt()
+            }
+
+            guessedWords.add(row)
+            stackTile.clear()
+            setAllowAllTiles(true)
+            pressedNum = 0
+            isLongPressed = false
+        }
+
+    }
+
     fun findGuessedWord(tile: Tile): ArrayList<Tile>? {
         for(row in guessedWords){
             for(t in row){
@@ -96,17 +158,114 @@ class GameViewModel: ViewModel() {
         return null
     }
 
-    fun editMode(){
-        longPressTile()
-        _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
+
+
+
+    fun pressTile(tile: Tile) {
+        if(synchronize)
+            return
+
+        synchronize = true
+        viewModelScope.launch{press(tile)}
+        synchronize = false
+
     }
 
-    fun guessNumber(): String{
-        return "${guessedWords.size}/${words.size}"
+    @Synchronized fun press(tile: Tile){
+        if (!tile.blocked) {
+            if(tile.allowed){
+                pressedNum++
+
+                val newTile = getTile(tile.row,tile.column).copy(pressed = !tile.pressed)
+                updateTile(newTile)
+
+                if(tileInStack(tile)){
+                    stackTile.pop()
+                }
+                else{
+                    stackTile.push(newTile)
+                }
+
+
+                if (!stackTile.isEmpty()){
+                    setAllowAllTiles(false)
+                    setAllowed(getFromStack(stackTile.peek()))
+                }
+                else{
+                    pressedNum = 0
+                    isLongPressed = true
+                    setAllowAllTiles(true)
+                }
+
+
+                guessWord()
+            }
+
+
+        }
     }
 
-    fun score(): String{
-        return "${score}"
+    fun longPressTile(){
+        counter = 0
+        if(pressedNum != 0)
+            isLongPressed = true
+        pressedNum = 0
+        stackTile.clear()
+        for(row in allTiles){
+            for(tile in row){
+                val newTile = tile.copy()
+                newTile.let{
+                    it.allowed = true
+                    it.pressed = false
+                }
+                updateTile(newTile)
+            }
+        }
+
+    }
+
+    fun tileInStack(tile: Tile):Boolean{
+        for(t in stackTile){
+            if(t.row == tile.row && t.column == tile.column)
+                return true
+        }
+
+        return false
+    }
+
+    fun getFromStack(tile: Tile): Tile{
+        return getTile(tile.row, tile.column)
+    }
+
+    fun addDirection(tile: Tile, direction: Direction):Direction{
+        return Direction(direction.row + tile.row, direction.column + tile.column)
+    }
+
+    fun setAllowed(pressedTile: Tile){
+        val newPress = pressedTile.copy(allowed = true)
+        updateTile(newPress)
+        for(dir in directions){
+            val newDir = addDirection(pressedTile,dir)
+            if(directionExist(newDir)){
+                var allowedTile = getTile(newDir.row,newDir.column)
+                if(!tileInStack(allowedTile))
+                {
+                    allowedTile = getTile(newDir.row,newDir.column).copy(allowed = true)
+                    updateTile(allowedTile)
+                }
+            }
+        }
+    }
+
+    fun setAllowAllTiles(allowed: Boolean){
+        for(row in allTiles){
+            for(tile in row){
+                if(!tile.blocked && tile.allowed != allowed){
+                    val newTile = tile.copy(allowed = allowed)
+                    updateTile(newTile)
+                }
+            }
+        }
     }
 
     fun randomColor(): Color{
@@ -139,38 +298,97 @@ class GameViewModel: ViewModel() {
             emptyTiles.add(row)
         }
         _uiState.value = GameUiState(allTiles = emptyTiles)
-        fillTiles()
+        viewModelScope.launch {
+            createListOfWords(uiState.rows,uiState.columns)
+            fillTiles()
+        }
+
     }
 
     private fun fillTiles(){
-        for(i in 0 until _uiState.value.rows){
-            for(j in 0 until _uiState.value.columns){
-                if(freeTile(i,j)){
-                    if(inputWord(i,j)){
-                        val color = randomColor()
-                        val alphaGradient = linspace(gradientFrom,gradientTo,stack.size).reversed()
-                        var i = 0
-                        for (tile in stack)
-                        {
-                            getTile(tile.row, tile.column).let{
-                                it.text = tile.text
-                                it.colorValue = color
-                                it.alpha = alphaGradient[i]
-                            }
-                            i++
-                        }
-                    }
-                    else{
-                        getTile(i, j).text = pickRandomLetter()
-                    }
-                }
-                getTile(i, j).let {
-                    it.allowed = true
-                    it.blocked = false
-                    it.pressed = false
+        val defaulText = _uiState.value.defaultText
+        while (!filler()){
+            for(i in 0 until _uiState.value.rows){
+                for(j in 0 until _uiState.value.columns){
+                    val newTile = getTile(i, j).copy(text = defaulText)
+                    updateTile(newTile)
                 }
             }
         }
+
+        for(i in 0 until _uiState.value.rows){
+            for(j in 0 until _uiState.value.columns){
+                if(getTile(i, j).text == defaulText) {
+                    val newTile = getTile(i, j).copy(colorValue = Color.White, blocked = true)
+                    updateTile(newTile)
+                }
+            }
+        }
+    }
+
+    fun filler():Boolean{
+        var inputIndex = 0
+        while(inputIndex != words.size-1){
+            inputIndex = 0
+            for(i in (0 until _uiState.value.rows).shuffled()){
+                for(j in (0 until _uiState.value.columns).shuffled()){
+                    if(freeTile(i,j)){
+                        if(inputWord(i,j,inputIndex)){
+
+                            for (tile in stack)
+                            {
+                                getTile(tile.row, tile.column).let{
+                                    it.text = tile.text
+//                                    it.colorValue = color
+//                                    it.alpha = alphaGradient[i]
+                                }
+
+                            }
+
+                            inputIndex++
+                        }
+                        else{
+                            Log.d("EEE", "${inputIndex} - ${words.size-1}")
+                            return false
+                        }
+
+                        if (inputIndex == words.size-1){
+                            Log.d("EEE", "${inputIndex} - ${words.size-1}")
+                            return true
+                        }
+                    }
+
+                    getTile(i, j).let {
+                        it.allowed = true
+                        it.blocked = false
+                        it.pressed = false
+                    }
+                }
+            }
+        }
+
+
+        return true
+    }
+
+    fun createListOfWords(row: Int, column: Int){
+        while (countLetters(words) != row*column){
+            if(countLetters(words) > row*column){
+                words.clear()
+            }
+
+            words.add(pickRandomWord())
+        }
+
+    }
+
+    fun countLetters(arr: ArrayList<String>): Int{
+        var count = 0
+        for(word in arr){
+            count += word.length
+        }
+
+        return count
     }
 
     private fun pickRandomWord(): String {
@@ -178,7 +396,6 @@ class GameViewModel: ViewModel() {
         if (words.contains(currentWord)) {
             return pickRandomWord()
         } else {
-            //
             return currentWord
         }
     }
@@ -187,18 +404,17 @@ class GameViewModel: ViewModel() {
         return allWords.random().random().toString()
     }
 
-    private fun inputWord(row: Int, column: Int):Boolean{
-
+    private fun inputWord(row: Int, column: Int, index: Int):Boolean{
+        val uiState = _uiState.value
         for(i in 0 until 10){
-            currentWord = pickRandomWord()
+            currentWord = words[index]
             stack.clear()
-            val uiState = _uiState.value
-            var tile = Tile(row, column, uiState.size, currentWord[0].toString())
+            val tile = Tile(row, column, uiState.size, currentWord[0].toString())
             stack.push(tile)
             inputLetter(1)
 
             if (!stack.isEmpty()){
-                words.add(currentWord)
+                //words.add(currentWord)
                 return true
             }
 
@@ -213,8 +429,8 @@ class GameViewModel: ViewModel() {
         val uiState = _uiState.value
 
         var tile: Tile? = null
-        var letter = currentWord[index].toString()
-        var first = (0..3).random()
+        val letter = currentWord[index].toString()
+        val first = (0..3).random()
         var id: Int
         var newRow: Int
         var newColumn: Int
@@ -249,7 +465,7 @@ class GameViewModel: ViewModel() {
         if(row < 0 || column < 0 || row >= uiState.rows || column >= uiState.columns)
             return false
 
-        if (uiState.allTiles?.get(row)?.get(column)?.text == uiState.defaultText){
+        if (getTile(row,column).text == uiState.defaultText){
             for(tile in stack){
                 if(tile.row == row && tile.column == column){
                     return false
@@ -276,119 +492,6 @@ class GameViewModel: ViewModel() {
         }
         wordInStack = wordInStack.reversed()
         return wordInStack
-    }
-
-    fun guessWord(){
-
-        if(words.contains(stackWord())){
-            val row = ArrayList<Tile>()
-            for(tile in stackTile){
-                row.add(tile)
-                val newTile = tile.copy(blocked = true)
-                updateTile(newTile)
-            }
-
-            score+=100
-            guessedWords.add(row)
-            stackTile.clear()
-            setAllowAllTiles(true)
-        }
-
-    }
-
-
-    fun pressTile(tile: Tile) {
-        if(synchronize)
-            return
-
-        synchronize = true
-        press(tile)
-        synchronize = false
-
-
-    }
-
-    fun press(tile: Tile){
-        if (!tile.blocked) {
-            if(tile.allowed){
-                val newTile = tile.copy(pressed = !tile.pressed)
-                updateTile(newTile)
-
-                if(tileInStack(tile))
-                    stackTile.pop()
-                else
-                    stackTile.push(newTile)
-
-                if (!stackTile.isEmpty()){
-                    setAllowAllTiles(false)
-                    setAllowed(getFromStack(stackTile.peek()))
-                }
-                else
-                    setAllowAllTiles(true)
-
-                guessWord()
-            }
-        }
-    }
-
-    fun longPressTile(){
-        counter = 0
-        stackTile.clear()
-        for(row in allTiles){
-            for(tile in row){
-                val newTile = tile.copy()
-                newTile.let{
-                    it.allowed = true
-                    it.pressed = false
-                }
-                updateTile(newTile)
-            }
-        }
-
-    }
-
-    fun tileInStack(tile: Tile):Boolean{
-        for(t in stackTile){
-            if(t.row == tile.row && t.column == tile.column)
-                return true
-        }
-
-        return false
-    }
-
-    fun getFromStack(tile: Tile): Tile{
-        return getTile(tile.row, tile.column)
-    }
-
-    fun setAllowed(pressedTile: Tile){
-        val newPress = pressedTile.copy(allowed = true)
-        updateTile(newPress)
-        for(dir in directions){
-            val newDir = addDirection(pressedTile,dir)
-            if(directionExist(newDir)){
-                var allowedTile = getTile(newDir.row,newDir.column)
-                if(!tileInStack(allowedTile))
-                {
-                    allowedTile = getTile(newDir.row,newDir.column).copy(allowed = true)
-                    updateTile(allowedTile)
-                }
-            }
-        }
-    }
-
-    fun addDirection(tile: Tile, direction: Direction):Direction{
-        return Direction(direction.row + tile.row, direction.column + tile.column)
-    }
-
-    fun setAllowAllTiles(allowed: Boolean){
-        for(row in allTiles){
-            for(tile in row){
-                if(!tile.blocked){
-                    val newTile = tile.copy(allowed = allowed)
-                    updateTile(newTile)
-                }
-            }
-        }
     }
 
     fun getTile(row: Int, column: Int): Tile {
