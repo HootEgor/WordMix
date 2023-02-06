@@ -12,7 +12,7 @@ import com.example.wordmix.ui.theme.Tile
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.roundToInt
+import kotlin.math.pow
 
 class GameViewModel: ViewModel() {
 
@@ -39,23 +39,24 @@ class GameViewModel: ViewModel() {
     private val gradientTo = 0.7f
 
     private var score = 0
-    private var comboValue = 1.0f
-    private val point = 100.0f
+    private var comboValue = 0
+    private val point = 100
+    private var bonus = 0
 
     init {
         restartGame()
     }
 
     fun restartGame() {
-        if(allTiles != null){
-            pressedNum = 0
-            counter = 0
-            stackTile.clear()
-            guessedWords.clear()
-            words.clear()
-            createTiles()
-            updateState()
-        }
+        setWinDailog(false)
+        score+=bonus
+        pressedNum = 0
+        counter = 0
+        stackTile.clear()
+        guessedWords.clear()
+        words.clear()
+        createTiles()
+        updateState()
     }
 
     fun resetGame(){
@@ -77,7 +78,7 @@ class GameViewModel: ViewModel() {
     }
 
     fun guessNumber(): String{
-        return "${guessedWords.size}/${words.size-1}"
+        return "${guessedWordsNumber()}/${words.size-1}"
     }
 
     fun score(): String{
@@ -85,12 +86,38 @@ class GameViewModel: ViewModel() {
     }
 
     fun combo(): String{
-        return "+ ${(point*comboValue).toInt()}"
+        return "+ ${(point+comboValue)}"
+    }
+
+    fun setWinDailog(set: Boolean){
+        _uiState.value = _uiState.value.copy(showWinDialog = set)
+    }
+
+    fun enableNextButton():Boolean{
+        if (guessedWordsNumber() >= words.size/3)
+            return true
+
+        return false
+    }
+
+    fun winDialogText(): String{
+        var text = "Бонусних балів: +"
+        bonus = guessedWordsNumber().toFloat().pow(2).toInt()
+        bonus = bonus*point/10
+        text+= bonus.toString()
+        return text
     }
 
     fun editMode(){
         longPressTile()
         _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
+    }
+
+    fun fireSize(): Float {
+        if(comboValue>100)
+            return 1.0f
+
+        return (comboValue.toFloat()/100)
     }
 
     fun unBlockWord(tile: Tile){
@@ -104,6 +131,7 @@ class GameViewModel: ViewModel() {
 
             guessedWords.remove(wordLocation)
             score-=150
+            isLongPressed = true
         }
         editMode()
     }
@@ -130,12 +158,12 @@ class GameViewModel: ViewModel() {
             }
 
             if(word.length == pressedNum && !isLongPressed){
-                score+= (point*comboValue).toInt()
-                comboValue+=0.1f
+                score+= (point+comboValue)
+                comboValue+=10
             }
             else{
-                comboValue = 1.0f
-                score+= (point).toInt()
+                comboValue = 0
+                score+= point
             }
 
             guessedWords.add(row)
@@ -143,6 +171,9 @@ class GameViewModel: ViewModel() {
             setAllowAllTiles(true)
             pressedNum = 0
             isLongPressed = false
+
+            if(guessedWords.size >= words.size-1)
+                setWinDailog(true)
         }
 
     }
@@ -158,6 +189,20 @@ class GameViewModel: ViewModel() {
         return null
     }
 
+    fun guessedWordsNumber():Int{
+        var num = 0
+        var word = ""
+        for (tiles in guessedWords){
+            word = ""
+            for(tile in tiles){
+                word+=tile.text
+            }
+            word = word.reversed()
+            if (words.contains(word))
+                num++
+        }
+        return num
+    }
 
 
 
@@ -348,12 +393,10 @@ class GameViewModel: ViewModel() {
                             inputIndex++
                         }
                         else{
-                            Log.d("EEE", "${inputIndex} - ${words.size-1}")
                             return false
                         }
 
                         if (inputIndex == words.size-1){
-                            Log.d("EEE", "${inputIndex} - ${words.size-1}")
                             return true
                         }
                     }
@@ -398,10 +441,6 @@ class GameViewModel: ViewModel() {
         } else {
             return currentWord
         }
-    }
-
-    private fun pickRandomLetter():String{
-        return allWords.random().random().toString()
     }
 
     private fun inputWord(row: Int, column: Int, index: Int):Boolean{

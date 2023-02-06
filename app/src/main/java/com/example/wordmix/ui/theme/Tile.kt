@@ -33,7 +33,5 @@ fun Tile.border(pressedNum: Int):BorderStroke?{
     else if(allowed) BorderStroke(2.dp, Color.DarkGray)
     else nullBorder
 
-
 }
-
 
