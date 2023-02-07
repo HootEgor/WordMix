@@ -22,6 +22,8 @@ class GameViewModel: ViewModel() {
 
     private val allTiles: ArrayList<ArrayList<Tile>>
         get() = _uiState.value.allTiles ?: arrayListOf()
+//    private val language: Int
+//        get () = _uiState.value.language
 
     private val directions = arrayOf(Direction(-1,0), Direction(1,0),
         Direction(0,-1), Direction(0,1))
@@ -43,38 +45,31 @@ class GameViewModel: ViewModel() {
     private val point = 100
     private var bonus = 0
 
-    init {
-        restartGame()
-    }
+//    init {
+//        restartGame()
+//    }
 
     fun restartGame() {
-        setWinDailog(false)
-        score+=bonus
-        pressedNum = 0
-        counter = 0
-        stackTile.clear()
-        guessedWords.clear()
-        words.clear()
-        createTiles()
-        updateState()
+        score = 0
+        comboValue = 0
+        bonus = 0
+
+        nextRound()
     }
 
-    fun resetGame(){
-        pressedNum = 0
-        counter = 0
-        stackTile.clear()
-        guessedWords.clear()
-        for(row in allTiles){
-            for(tile in row){
-                val newTile = tile.copy(blocked = false)
-                newTile.let{
-                    it.allowed = true
-                    it.blocked = false
-                    it.pressed = false
-                }
-                updateTile(newTile)
-            }
+    fun nextRound(){
+        viewModelScope.launch {
+            setWinDailog(false)
+            score+=bonus
+            pressedNum = 0
+            counter = 0
+            stackTile.clear()
+            guessedWords.clear()
+            words.clear()
+            createTiles()
+            updateState()
         }
+
     }
 
     fun guessNumber(): String{
@@ -108,6 +103,17 @@ class GameViewModel: ViewModel() {
         return text
     }
 
+    fun setTab(index: Int){
+        if (index == 1)
+            restartGame()
+        _uiState.value = _uiState.value.copy(tab = index)
+
+    }
+
+    fun setLanguage(index: Int){
+        _uiState.value = _uiState.value.copy(language = index)
+    }
+
     fun editMode(){
         longPressTile()
         _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
@@ -118,6 +124,34 @@ class GameViewModel: ViewModel() {
             return 1.0f
 
         return (comboValue.toFloat()/100)
+    }
+
+    fun currentLanguageText():String{
+        var text = ""
+        viewModelScope.launch {
+            text =  when(_uiState.value.language){
+                0 -> "Українська"
+                1 -> "English"
+                2 -> "Español"
+                else -> "Error"
+            }
+        }
+
+        return text
+    }
+
+    fun languageText(index: Int): String{
+        var text = ""
+        viewModelScope.launch {
+            text =  when(index){
+                0 -> "Українська"
+                1 -> "English"
+                2 -> "Español"
+                else -> "Error"
+            }
+        }
+
+        return text
     }
 
     fun unBlockWord(tile: Tile){
@@ -140,7 +174,7 @@ class GameViewModel: ViewModel() {
 
     fun guessWord(){
         val word = stackWord()
-        if(allWords.contains(word)){
+        if(allWords[_uiState.value.language].contains(word)){
             val row = ArrayList<Tile>()
             val color = randomColor()
             val alphaGradient = linspace(gradientFrom,gradientTo,stackTile.size).reversed()
@@ -342,7 +376,7 @@ class GameViewModel: ViewModel() {
             }
             emptyTiles.add(row)
         }
-        _uiState.value = GameUiState(allTiles = emptyTiles)
+        _uiState.value = _uiState.value.copy(allTiles = emptyTiles)//GameUiState(allTiles = emptyTiles)
         viewModelScope.launch {
             createListOfWords(uiState.rows,uiState.columns)
             fillTiles()
@@ -435,7 +469,7 @@ class GameViewModel: ViewModel() {
     }
 
     private fun pickRandomWord(): String {
-        currentWord = allWords.random()
+        currentWord = allWords[_uiState.value.language].random()
         if (words.contains(currentWord)) {
             return pickRandomWord()
         } else {

@@ -9,7 +9,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +20,9 @@ import com.example.wordmix.ui.theme.Tile
 import com.example.wordmix.ui.theme.border
 import com.example.wordmix.ui.theme.color
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
@@ -34,94 +36,143 @@ fun GameScreen(
 ) {
     val gameUiState by viewModel._uiState
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(top = 20.dp),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.07f),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ){
-            Text(text  = viewModel.guessNumber(),
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center)
-            Text(text  = viewModel.score(),
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center)
-            Row(modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .fillMaxHeight(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Start){
-                Text(text  = viewModel.combo(),
+    when(gameUiState.tab){
+        0 -> {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Text(text  = "Оберіть мову:",
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center)
-                Gif(viewModel)
 
-            }
+                var expanded by remember { mutableStateOf(false) }
 
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.8f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-
-            for (i in 0 until gameUiState.rows) {
-                Row{
-                    for (j in 0 until gameUiState.columns) {
-                        if(!gameUiState.editMode){
-                            viewModel.getTile(i, j).let{
-                                Cell(tile = it,
-                                    pressedNum = viewModel.pressedNum,
-                                    press = { viewModel.pressTile(it) },
-                                    longPress = { viewModel.longPressTile() })
-                            }
-                        } else{
-                            viewModel.getTile(i, j).let{
-                                Cell(tile = it,
-                                    pressedNum = viewModel.pressedNum,
-                                    press = { viewModel.unBlockWord(it) },
-                                    longPress = { viewModel.longPressTile() })
-                            }
-                        }
-
+                Box {
+                    Text(text = viewModel.currentLanguageText(),
+                        fontSize=18.sp,
+                        modifier = Modifier
+                        .padding(10.dp)
+                        .clickable(onClick={ expanded = !expanded}))
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        CustomText(text = viewModel.languageText(0),
+                            press = {expanded = !expanded
+                                viewModel.setLanguage(0)})
+                        Divider()
+                        CustomText(text = viewModel.languageText(1),
+                            press = {expanded = !expanded
+                                viewModel.setLanguage(1)})
+                        Divider()
+                        CustomText(text = viewModel.languageText(2),
+                            press = {expanded = !expanded
+                                viewModel.setLanguage(2)})
                     }
                 }
+
+                CustomButton(enable = true,
+                    text = "Почати",
+                    press = { viewModel.setTab(1)})
             }
         }
+        1 -> {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 20.dp),
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.07f),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ){
+                    Text(text  = viewModel.guessNumber(),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center)
+                    Text(text  = viewModel.score(),
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center)
+                    Row(modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .fillMaxHeight(),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.Start){
+                        Text(text  = viewModel.combo(),
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center)
+                        Gif(viewModel)
 
-        Row(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ){
-            CustomButton(enable = viewModel.enableNextButton(),
-                text = "Далі",
-                press = { viewModel.setWinDailog(true)})
-//            CustomButton(text = "Reset",
-//                press = { viewModel.resetGame()})
-            CustomButton(enable = true,
-                text = "Відміна",
-                press = { viewModel.editMode()})
+                    }
 
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.8f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+
+                    for (i in 0 until gameUiState.rows) {
+                        Row{
+                            for (j in 0 until gameUiState.columns) {
+                                if(!gameUiState.editMode){
+                                    viewModel.getTile(i, j).let{
+                                        Cell(tile = it,
+                                            pressedNum = viewModel.pressedNum,
+                                            press = { viewModel.pressTile(it) },
+                                            longPress = { viewModel.longPressTile() })
+                                    }
+                                } else{
+                                    viewModel.getTile(i, j).let{
+                                        Cell(tile = it,
+                                            pressedNum = viewModel.pressedNum,
+                                            press = { viewModel.unBlockWord(it) },
+                                            longPress = { viewModel.longPressTile() })
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ){
+                    CustomButton(enable = viewModel.enableNextButton(),
+                        text = "Далі",
+                        press = { viewModel.setWinDailog(true)})
+                    CustomButton(enable = true,
+                        text = "Відміна",
+                        press = { viewModel.editMode()})
+                    CustomButton(enable = true,
+                        text = "Back",
+                        press = { viewModel.setTab(0)})
+
+                }
+
+
+            }
+
+            if(gameUiState.showWinDialog){
+                WinDialog(text = viewModel.winDialogText(),
+                    setState = {viewModel.setWinDailog(false)},
+                    nextRound = { viewModel.nextRound() })
+            }
         }
-
-
+        2 -> {}
     }
 
-    if(gameUiState.showWinDialog){
-        WinDialog(text = viewModel.winDialogText(),
-            setState = {viewModel.setWinDailog(false)},
-            nextRound = { viewModel.restartGame() })
-    }
 
 }
 
@@ -175,6 +226,20 @@ fun CustomButton(
         Text(text = text)
     }
 
+}
+
+@Composable
+fun CustomText(
+    text: String,
+    press: () -> Unit
+){
+
+    Text(text = text,
+        fontSize=18.sp,
+        modifier = Modifier
+            .padding(10.dp)
+            .clickable(onClick=press)
+    )
 }
 
 @Composable

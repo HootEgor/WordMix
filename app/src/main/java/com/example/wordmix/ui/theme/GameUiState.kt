@@ -8,5 +8,7 @@ data class GameUiState(
     var allTiles: ArrayList<ArrayList<Tile>>? = null,
     val pressedCounter: Int = 0,
     var editMode: Boolean = false,
-    var showWinDialog: Boolean = false
+    var showWinDialog: Boolean = false,
+    var language: Int = 0,
+    var tab: Int = 0
 )
