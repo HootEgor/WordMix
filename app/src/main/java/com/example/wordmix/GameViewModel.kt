@@ -119,6 +119,10 @@ class GameViewModel: ViewModel() {
         _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
     }
 
+    fun allowEditButton(): Boolean{
+        return score>=150
+    }
+
     fun fireSize(): Float {
         if(comboValue>100)
             return 1.0f
@@ -154,8 +158,8 @@ class GameViewModel: ViewModel() {
         return text
     }
 
-    fun unBlockWord(tile: Tile){
-        val wordLocation = findGuessedWord(tile)
+    fun unBlockWord(){
+        val wordLocation = findGuessedWord(guessedWords.last()[0])
         if (wordLocation != null && score >= 150){
 
             for(t in wordLocation){

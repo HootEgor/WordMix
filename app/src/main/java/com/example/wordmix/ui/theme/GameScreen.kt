@@ -1,8 +1,7 @@
 package com.example.android.unscramble.ui
 
 import android.os.Build.VERSION.SDK_INT
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -19,10 +18,9 @@ import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.Tile
 import com.example.wordmix.ui.theme.border
 import com.example.wordmix.ui.theme.color
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.ui.graphics.Color
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
@@ -39,44 +37,68 @@ fun GameScreen(
     when(gameUiState.tab){
         0 -> {
             Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
-                Text(text  = "Оберіть мову:",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center)
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.2f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Оберіть мову:",
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center
+                    )
 
-                var expanded by remember { mutableStateOf(false) }
+                    var expanded by remember { mutableStateOf(false) }
 
-                Box {
-                    Text(text = viewModel.currentLanguageText(),
-                        fontSize=18.sp,
-                        modifier = Modifier
-                        .padding(10.dp)
-                        .clickable(onClick={ expanded = !expanded}))
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        CustomText(text = viewModel.languageText(0),
-                            press = {expanded = !expanded
-                                viewModel.setLanguage(0)})
-                        Divider()
-                        CustomText(text = viewModel.languageText(1),
-                            press = {expanded = !expanded
-                                viewModel.setLanguage(1)})
-                        Divider()
-                        CustomText(text = viewModel.languageText(2),
-                            press = {expanded = !expanded
-                                viewModel.setLanguage(2)})
+                    Box {
+                        Text(text = viewModel.currentLanguageText(),
+                            fontSize = 18.sp,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .clickable(onClick = { expanded = !expanded })
+                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            CustomText(text = viewModel.languageText(0),
+                                press = {
+                                    expanded = !expanded
+                                    viewModel.setLanguage(0)
+                                })
+                            Divider()
+                            CustomText(text = viewModel.languageText(1),
+                                press = {
+                                    expanded = !expanded
+                                    viewModel.setLanguage(1)
+                                })
+                            Divider()
+                            CustomText(text = viewModel.languageText(2),
+                                press = {
+                                    expanded = !expanded
+                                    viewModel.setLanguage(2)
+                                })
+                        }
                     }
                 }
 
-                CustomButton(enable = true,
-                    text = "Почати",
-                    press = { viewModel.setTab(1)})
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CustomButton(enable = true,
+                        text = "Почати",
+                        press = { viewModel.setTab(1) })
+                }
+
+
             }
         }
         1 -> {
@@ -122,22 +144,12 @@ fun GameScreen(
                     for (i in 0 until gameUiState.rows) {
                         Row{
                             for (j in 0 until gameUiState.columns) {
-                                if(!gameUiState.editMode){
-                                    viewModel.getTile(i, j).let{
-                                        Cell(tile = it,
-                                            pressedNum = viewModel.pressedNum,
-                                            press = { viewModel.pressTile(it) },
-                                            longPress = { viewModel.longPressTile() })
-                                    }
-                                } else{
-                                    viewModel.getTile(i, j).let{
-                                        Cell(tile = it,
-                                            pressedNum = viewModel.pressedNum,
-                                            press = { viewModel.unBlockWord(it) },
-                                            longPress = { viewModel.longPressTile() })
-                                    }
+                                viewModel.getTile(i, j).let{
+                                    Cell(tile = it,
+                                        pressedNum = viewModel.pressedNum,
+                                        press = { viewModel.pressTile(it) },
+                                        longPress = { viewModel.longPressTile() })
                                 }
-
                             }
                         }
                     }
@@ -152,11 +164,11 @@ fun GameScreen(
                     CustomButton(enable = viewModel.enableNextButton(),
                         text = "Далі",
                         press = { viewModel.setWinDailog(true)})
-                    CustomButton(enable = true,
+                    CustomButton(enable = viewModel.allowEditButton(),
                         text = "Відміна",
                         press = { viewModel.editMode()})
                     CustomButton(enable = true,
-                        text = "Back",
+                        text = "Назад",
                         press = { viewModel.setTab(0)})
 
                 }
@@ -169,6 +181,12 @@ fun GameScreen(
                     setState = {viewModel.setWinDailog(false)},
                     nextRound = { viewModel.nextRound() })
             }
+
+            if(gameUiState.editMode){
+                EditDialog(action = {viewModel.unBlockWord()},
+                    setState = { viewModel.editMode()})
+            }
+
         }
         2 -> {}
     }
@@ -238,7 +256,7 @@ fun CustomText(
         fontSize=18.sp,
         modifier = Modifier
             .padding(10.dp)
-            .clickable(onClick=press)
+            .clickable(onClick = press)
     )
 }
 
@@ -275,9 +293,12 @@ fun WinDialog(
 ) {
     MaterialTheme {
         AlertDialog(
-            onDismissRequest = {},
+            onDismissRequest = setState,
             shape = MaterialTheme.shapes.small,
             title = {
+                Text("Почати наступний раунд?")
+            },
+            text = {
                 Text(text = text)
             },
             confirmButton = {
@@ -285,6 +306,40 @@ fun WinDialog(
                     onClick = nextRound,
                     shape = RoundedCornerShape(100)) {
                     Text("Наступний раунд")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = setState,
+                    shape = RoundedCornerShape(100)) {
+                    Text("Назад")
+                }
+            }
+        )
+
+    }
+}
+
+@Composable
+fun EditDialog(
+    setState: () -> Unit,
+    action: ()->Unit
+) {
+    MaterialTheme {
+        AlertDialog(
+            onDismissRequest = setState,
+            shape = MaterialTheme.shapes.small,
+            title = {
+                Text(text = "Відмінити попереднє слово?")
+            },
+            text = {
+                Text("Вартість: -150")
+            },
+            confirmButton = {
+                Button(
+                    onClick = action,
+                    shape = RoundedCornerShape(100)) {
+                    Text("Відміна")
                 }
             },
             dismissButton = {
