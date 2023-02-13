@@ -1,22 +1,24 @@
 package com.example.wordmix
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wordmix.data.allWords
+import com.example.wordmix.ui.theme.BackManager
 import com.example.wordmix.ui.theme.Direction
 import com.example.wordmix.ui.theme.GameUiState
 import com.example.wordmix.ui.theme.Tile
 import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.pow
+
 
 class GameViewModel: ViewModel() {
 
     var _uiState = mutableStateOf(GameUiState())
+        private set
+    var backManager = mutableStateOf(BackManager())
         private set
     private var synchronize = false
 
