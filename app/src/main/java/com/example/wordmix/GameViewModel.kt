@@ -47,11 +47,13 @@ class GameViewModel: ViewModel() {
     private val point = 100
     private var bonus = 0
 
+
 //    init {
 //        restartGame()
 //    }
 
     fun restartGame() {
+
         score = 0
         comboValue = 0
         bonus = 0

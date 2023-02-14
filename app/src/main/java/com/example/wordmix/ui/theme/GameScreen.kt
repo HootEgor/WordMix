@@ -2,7 +2,6 @@ package com.example.android.unscramble.ui
 
 import android.R.attr.fontFamily
 import androidx.compose.ui.text.font.FontFamily
-//import android.graphics.fonts.FontFamily
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -37,8 +36,10 @@ import coil.decode.ImageDecoderDecoder
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.R
 import com.example.wordmix.ui.theme.Tile
+import com.example.wordmix.ui.theme.WordMixTheme
 import com.example.wordmix.ui.theme.border
 import com.example.wordmix.ui.theme.color
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
 @Composable
@@ -46,6 +47,8 @@ fun GameScreen(
     modifier: Modifier = Modifier,
     viewModel: GameViewModel = viewModel()
 ) {
+
+
     val gameUiState by viewModel._uiState
     val backManager by viewModel.backManager
 
@@ -317,7 +320,7 @@ fun GameScreen(
         }
     }
 
-
+    SystemUIColor(color = MaterialTheme.colors.primary)
 }
 
 
@@ -500,6 +503,22 @@ fun EditDialog(
         )
 
     }
+}
+
+@Composable
+fun SystemUIColor(
+    color: Color
+){
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setNavigationBarColor(
+        color = color,
+        darkIcons = false
+    )
+
+    systemUiController.setSystemBarsColor(
+        color = color,
+        darkIcons = false
+    )
 }
 
 @Preview(showBackground = true)
