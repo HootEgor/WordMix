@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "843878489574",
+    "project_id": "wordmixdatabase",
+    "storage_bucket": "wordmixdatabase.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843878489574:android:9c4dce83b4d844b624ca27",
+        "android_client_info": {
+          "package_name": "com.example.wordmix"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "843878489574-3d97aaijisq4dtaqtv7dr604ku2g9acd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtkYzL67PMTdKG66UQHcmwGWd02vm-cAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "843878489574-3d97aaijisq4dtaqtv7dr604ku2g9acd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
