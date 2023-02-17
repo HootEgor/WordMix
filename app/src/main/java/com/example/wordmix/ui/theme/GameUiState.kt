@@ -10,5 +10,10 @@ data class GameUiState(
     var editMode: Boolean = false,
     var showWinDialog: Boolean = false,
     var language: Int = 0,
-    var tab: Int = 0
+    var leaderBoardLanguage: Int = 0,
+    var tab: Int = 0,
+    var loginUser: User? = null,
+    var userHistory: ArrayList<ScoreCell>? = null,
+
 )
+

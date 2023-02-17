@@ -5,12 +5,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wordmix.data.allWords
-import com.example.wordmix.ui.theme.BackManager
-import com.example.wordmix.ui.theme.Direction
-import com.example.wordmix.ui.theme.GameUiState
-import com.example.wordmix.ui.theme.Tile
+import com.example.wordmix.ui.theme.*
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.pow
 
 
@@ -18,12 +16,16 @@ class GameViewModel: ViewModel() {
 
     var _uiState = mutableStateOf(GameUiState())
         private set
-    var backManager = mutableStateOf(BackManager())
+    var backManager = BackManager()
         private set
     private var synchronize = false
+    private var isLogined = false
 
     private val allTiles: ArrayList<ArrayList<Tile>>
         get() = _uiState.value.allTiles ?: arrayListOf()
+
+    private var leaderBoard: ArrayList<ScoreCell> = ArrayList()
+
 //    private val language: Int
 //        get () = _uiState.value.language
 
@@ -33,7 +35,7 @@ class GameViewModel: ViewModel() {
     private var currentWord: String = ""
     var words: ArrayList<String> = ArrayList()
     private var stackTile = ArrayDeque<Tile>()
-    private val guessedWords: ArrayList<ArrayList<Tile>> = ArrayList<ArrayList<Tile>>()
+    private val guessedWords: ArrayList<ArrayList<Tile>> = ArrayList()
 
     private var counter = 0
     private var isLongPressed = false
@@ -51,6 +53,39 @@ class GameViewModel: ViewModel() {
 //    init {
 //        restartGame()
 //    }
+
+    fun login(login: String, password: String){
+        viewModelScope.launch {
+            val user = backManager.login(login,password)
+            if(user != null){
+                isLogined = true
+                _uiState.value = _uiState.value.copy(loginUser = user)
+                setTab(2)
+            }
+        }
+
+    }
+
+    fun setLeaderBoard(language: Int){
+        _uiState.value = _uiState.value.copy(leaderBoardLanguage = language)
+        //Log.d("EEE", "${getLeaderBoard()}")
+    }
+
+    fun createLeaderBoard(){
+        viewModelScope.launch {
+            var newLeaderBoard = backManager.getLeaderBoardByLanguage()
+            for(cell in newLeaderBoard){
+                    cell.userName = backManager.getUserNameByID(cell.userID)
+            }
+
+            leaderBoard = newLeaderBoard
+        }
+    }
+
+    @JvmName("getLeaderBoard1")
+    fun getLeaderBoard(): List<ScoreCell> {
+        return leaderBoard.filter { s -> s.language == _uiState.value.leaderBoardLanguage }
+    }
 
     fun restartGame() {
 
@@ -110,7 +145,17 @@ class GameViewModel: ViewModel() {
     fun setTab(index: Int){
         if (index == 1)
             restartGame()
-        _uiState.value = _uiState.value.copy(tab = index)
+
+        if (isLogined && index == 2){
+            viewModelScope.launch {
+                val loginUser = _uiState.value.loginUser
+                val userHistory = loginUser?.let { backManager.getUserScoreHistory(it) }
+                _uiState.value = _uiState.value.copy(userHistory = userHistory)
+                setTab(3)
+            }
+        }else{
+            _uiState.value = _uiState.value.copy(tab = index)
+        }
 
     }
 
@@ -160,6 +205,13 @@ class GameViewModel: ViewModel() {
         }
 
         return text
+    }
+
+    fun setLanguageButtonBoarder(language: Int): Boolean{
+        if(language == _uiState.value.leaderBoardLanguage)
+            return true
+
+        return false
     }
 
     fun unBlockWord(){
