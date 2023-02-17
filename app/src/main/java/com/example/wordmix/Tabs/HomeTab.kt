@@ -39,8 +39,7 @@ fun HomeTab(
         },
         floatingActionButton = {
             CustomFloatingButton(
-            press = {viewModel.setTab(4)
-                viewModel.createLeaderBoard()},
+            press = {viewModel.switchToLeaderBoard()},
             size = 80,
             icon = Icons.Default.Star)
         },
@@ -48,7 +47,7 @@ fun HomeTab(
         floatingActionButtonPosition = FabPosition.Center
     ) {
         Column(modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize().padding(it),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){

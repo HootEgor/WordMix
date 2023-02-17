@@ -72,7 +72,7 @@ fun GameTab(
         ){
 
             for (i in 0 until gameUiState.rows) {
-                Row{
+                Row {
                     for (j in 0 until gameUiState.columns) {
                         viewModel.getTile(i, j).let{
                             Cell(tile = it,

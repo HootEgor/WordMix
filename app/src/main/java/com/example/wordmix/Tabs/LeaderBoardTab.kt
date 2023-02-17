@@ -1,6 +1,7 @@
 package com.example.wordmix.Tabs
 
 import android.util.Log
+import android.widget.ProgressBar
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,7 +47,7 @@ fun LeaderBoardTab(
         floatingActionButtonPosition = FabPosition.Center
     ){
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(it),
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -84,8 +85,10 @@ fun LeaderBoardTab(
                         .weight(1f, false)
                         .fillMaxSize()
                 ) {
-                    for((n, cell) in viewModel.getLeaderBoard().withIndex()){
-                        Log.d("EEE", "${cell}")
+                    //TODO CircularProgressIndicator()
+                    val board = viewModel.getLeaderBoard()
+                    for((n, cell) in board.withIndex()){
+                        Log.d("EEE", "$cell")
                         ScoreCell(
                             index = n+1,
                             userName = cell.userName,

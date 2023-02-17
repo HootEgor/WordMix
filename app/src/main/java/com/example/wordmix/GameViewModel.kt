@@ -71,15 +71,21 @@ class GameViewModel: ViewModel() {
         //Log.d("EEE", "${getLeaderBoard()}")
     }
 
-    fun createLeaderBoard(){
+    private fun createLeaderBoard(){
         viewModelScope.launch {
-            var newLeaderBoard = backManager.getLeaderBoardByLanguage()
+            val newLeaderBoard = backManager.getLeaderBoardByLanguage()
             for(cell in newLeaderBoard){
                     cell.userName = backManager.getUserNameByID(cell.userID)
             }
 
             leaderBoard = newLeaderBoard
+            setTab(4)
         }
+    }
+
+    fun switchToLeaderBoard() {
+        //setTab(4)
+        createLeaderBoard()
     }
 
     @JvmName("getLeaderBoard1")
