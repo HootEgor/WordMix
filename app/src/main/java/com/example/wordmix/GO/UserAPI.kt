@@ -10,6 +10,8 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface UserAPI {
+    @GET("user/score/{id}")
+    suspend fun getUserHistory(@Path("id") userId: String): ArrayList<ScoreCell>
     @GET("user/{id}")
     suspend fun getUserInfo(@Path("id") userId: String): User
 

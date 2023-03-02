@@ -30,10 +30,6 @@ fun HomeTab(
                     press = {viewModel.setTab(2)},
                     size = 50,
                     icon = Icons.Default.AccountCircle)
-                CustomFloatingButton(
-                    press = {viewModel.test()},
-                    size = 50,
-                    icon = Icons.Default.Add)
             }
         },
         bottomBar = {

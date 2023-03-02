@@ -37,7 +37,7 @@ fun LoginedTab(
         topBar = {
             TopAppBar{
                 CustomFloatingButton(
-                    press = {viewModel.setTab(2)},
+                    press = {viewModel.logoutUser()},
                     size = 50,
                     icon = Icons.Default.ExitToApp)
             }
@@ -82,18 +82,15 @@ fun LoginedTab(
 
                     if(gameUiState.userHistory != null){
                         var n = 0
-                        for(i in 0 until 20){
-
-                            for(cell in gameUiState.userHistory!!){
-                                n++
-                                cell.let {
-                                    HistoryScoreCell(
-                                        index = n,
-                                        cell = it,
-                                        laguageText = viewModel.languageText(it.Language))
-                                }
-                                Divider()
+                        for(cell in gameUiState.userHistory!!){
+                            n++
+                            cell.let {
+                                HistoryScoreCell(
+                                    index = n,
+                                    cell = it,
+                                    laguageText = viewModel.languageText(it.Language))
                             }
+                            Divider()
                         }
                     }
                 }

@@ -82,7 +82,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    fun login(login: String, password: String){
+    suspend fun login(login: String, password: String){
 
         viewModelScope.launch {
             val user = User(Login = login, Password = password)
@@ -92,8 +92,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
                 saveUserTokenToSP(userToken)
                 _uiState.value = _uiState.value.copy(loginUser = user)
             }
-        }.wait()
-
+        }.join()
     }
 
     fun authUser(){
@@ -135,11 +134,14 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
     }
 
     fun loginUser(login: String, password: String){
-        login(login,password)
-        setTab(2)
+        viewModelScope.launch {
+            login(login,password)
+            setTab(2)
+        }
     }
 
     fun logoutUser(){
+        userToken = ""
         saveUserTokenToSP("")
         setTab(2)
     }
@@ -210,7 +212,10 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
         if (userToken != "" && index == 2){
             viewModelScope.launch {
-                //TODO Logging user
+                viewModelScope.launch {
+                    val userHistory = apiService.getUserHistory(getUserIDFromToken())
+                    _uiState.value = _uiState.value.copy(userHistory = userHistory)
+                }
                 setTab(3)
             }
         }else{
