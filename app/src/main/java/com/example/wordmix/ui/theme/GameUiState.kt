@@ -1,5 +1,7 @@
 package com.example.wordmix.ui.theme
 
+import com.example.wordmix.GO.User
+
 data class GameUiState(
     var rows: Int = 11,
     var columns: Int = 7,
@@ -15,5 +17,5 @@ data class GameUiState(
     var loginUser: User? = null,
     var userHistory: ArrayList<ScoreCell>? = null,
 
-)
+    )
 

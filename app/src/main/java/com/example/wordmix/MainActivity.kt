@@ -1,5 +1,6 @@
 package com.example.wordmix
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity

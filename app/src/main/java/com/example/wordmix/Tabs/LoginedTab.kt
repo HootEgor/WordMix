@@ -1,5 +1,6 @@
 package com.example.wordmix.Tabs
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,6 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +26,7 @@ import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.GameUiState
 import com.example.wordmix.ui.theme.ScoreCell
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun LoginedTab(
     modifier: Modifier = Modifier,
@@ -30,7 +35,12 @@ fun LoginedTab(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar{}
+            TopAppBar{
+                CustomFloatingButton(
+                    press = {viewModel.setTab(2)},
+                    size = 50,
+                    icon = Icons.Default.ExitToApp)
+            }
         },
         bottomBar = {
             BottomAppBar(
@@ -80,7 +90,7 @@ fun LoginedTab(
                                     HistoryScoreCell(
                                         index = n,
                                         cell = it,
-                                        laguageText = viewModel.languageText(it.language))
+                                        laguageText = viewModel.languageText(it.Language))
                                 }
                                 Divider()
                             }
@@ -140,7 +150,7 @@ fun HistoryScoreCell(
                 .fillMaxHeight()
                 .fillMaxWidth(),
         ){
-            Text(text = cell.score.toString(),
+            Text(text = cell.Score.toString(),
                 fontSize = 20.sp,
                 modifier = Modifier
                     .wrapContentSize()

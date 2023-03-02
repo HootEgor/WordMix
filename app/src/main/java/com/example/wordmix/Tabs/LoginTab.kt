@@ -1,5 +1,6 @@
 package com.example.wordmix.Tabs
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.example.android.unscramble.ui.CustomFloatingButton
 import com.example.wordmix.GameViewModel
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun LoginTab(
     modifier: Modifier = Modifier,
@@ -102,7 +104,7 @@ fun LoginTab(
 
             Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
                 Button(
-                    onClick = {viewModel.login(username.value.text,password.value.text)},
+                    onClick = {viewModel.loginUser(username.value.text,password.value.text)},
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
                         .fillMaxWidth()

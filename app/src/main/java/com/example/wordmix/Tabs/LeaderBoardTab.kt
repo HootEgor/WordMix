@@ -88,11 +88,11 @@ fun LeaderBoardTab(
                     //TODO CircularProgressIndicator()
                     val board = viewModel.getLeaderBoard()
                     for((n, cell) in board.withIndex()){
-                        Log.d("EEE", "$cell")
+                        //Log.d("EEE", "$cell")
                         ScoreCell(
                             index = n+1,
-                            userName = cell.userName,
-                            score = cell.score.toString()
+                            userName = cell.UserID,
+                            score = cell.Score.toString()
                         )
                         Divider()
                     }

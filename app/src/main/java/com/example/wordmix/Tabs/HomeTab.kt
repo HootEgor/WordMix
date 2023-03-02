@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +30,10 @@ fun HomeTab(
                     press = {viewModel.setTab(2)},
                     size = 50,
                     icon = Icons.Default.AccountCircle)
+                CustomFloatingButton(
+                    press = {viewModel.test()},
+                    size = 50,
+                    icon = Icons.Default.Add)
             }
         },
         bottomBar = {

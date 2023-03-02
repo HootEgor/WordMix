@@ -1,25 +1,38 @@
 package com.example.wordmix
 
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wordmix.GO.User
+import com.example.wordmix.GO.UserNetwork
 import com.example.wordmix.data.allWords
 import com.example.wordmix.ui.theme.*
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.pow
+import com.auth0.jwt.JWT
+import com.auth0.jwt.interfaces.DecodedJWT
+import okhttp3.internal.wait
 
 
-class GameViewModel: ViewModel() {
+class GameViewModel(application: Application): AndroidViewModel(application) {
+
+    private val sharedPreferences = application.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
 
     var _uiState = mutableStateOf(GameUiState())
         private set
-    var backManager = BackManager()
-        private set
+
+    val apiService = UserNetwork.retrofit
+    var userToken: String = ""
+
     private var synchronize = false
-    private var isLogined = false
 
     private val allTiles: ArrayList<ArrayList<Tile>>
         get() = _uiState.value.allTiles ?: arrayListOf()
@@ -50,47 +63,90 @@ class GameViewModel: ViewModel() {
     private var bonus = 0
 
 
-//    init {
-//        restartGame()
-//    }
+    init {
+        try{
+            authUser()
+        }catch (e: Exception){
+            Log.d("EEE", "$e" )
+        }
+
+    }
+
+    fun test(){
+        viewModelScope.launch {
+            val apiService = UserNetwork.retrofit
+
+            leaderBoard = apiService.getLeaders()
+
+            //Log.d("EEE", "$leaderBoard" )
+        }
+    }
 
     fun login(login: String, password: String){
+
         viewModelScope.launch {
-            val user = backManager.login(login,password)
-            if(user != null){
-                isLogined = true
+            val user = User(Login = login, Password = password)
+            val respost = apiService.loginUser(user)
+            if(respost.code() == 200){
+                userToken = respost.body().toString()
+                saveUserTokenToSP(userToken)
                 _uiState.value = _uiState.value.copy(loginUser = user)
-                setTab(2)
+            }
+        }.wait()
+
+    }
+
+    fun authUser(){
+        viewModelScope.launch {
+            getUserTokenFromSP()
+            try{
+                val userID = getUserIDFromToken()
+                val user = apiService.getUserInfo(userID)
+                login(user.Login, user.Password)
+            }catch (e: Exception){
+                Log.d("EEE", "$e" )
             }
         }
 
     }
 
+    fun decodeJwt(token: String): DecodedJWT? {
+        return try {
+            JWT.decode(token)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
     fun setLeaderBoard(language: Int){
         _uiState.value = _uiState.value.copy(leaderBoardLanguage = language)
-        //Log.d("EEE", "${getLeaderBoard()}")
     }
 
     private fun createLeaderBoard(){
         viewModelScope.launch {
-            val newLeaderBoard = backManager.getLeaderBoardByLanguage()
-            for(cell in newLeaderBoard){
-                    cell.userName = backManager.getUserNameByID(cell.userID)
-            }
-
-            leaderBoard = newLeaderBoard
+            leaderBoard = apiService.getLeaders()
             setTab(4)
         }
     }
 
     fun switchToLeaderBoard() {
-        //setTab(4)
         createLeaderBoard()
+    }
+
+    fun loginUser(login: String, password: String){
+        login(login,password)
+        setTab(2)
+    }
+
+    fun logoutUser(){
+        saveUserTokenToSP("")
+        setTab(2)
     }
 
     @JvmName("getLeaderBoard1")
     fun getLeaderBoard(): List<ScoreCell> {
-        return leaderBoard.filter { s -> s.language == _uiState.value.leaderBoardLanguage }
+        return leaderBoard.filter { s -> s.Language == _uiState.value.leaderBoardLanguage }
     }
 
     fun restartGame() {
@@ -152,11 +208,9 @@ class GameViewModel: ViewModel() {
         if (index == 1)
             restartGame()
 
-        if (isLogined && index == 2){
+        if (userToken != "" && index == 2){
             viewModelScope.launch {
-                val loginUser = _uiState.value.loginUser
-                val userHistory = loginUser?.let { backManager.getUserScoreHistory(it) }
-                _uiState.value = _uiState.value.copy(userHistory = userHistory)
+                //TODO Logging user
                 setTab(3)
             }
         }else{
@@ -649,6 +703,21 @@ class GameViewModel: ViewModel() {
 
     private fun updateState() {
         _uiState.value = _uiState.value.copy(pressedCounter = counter)
+    }
+
+    private fun saveUserTokenToSP(token: String){
+        with(sharedPreferences.edit()) {
+            putString("UserToken", token)
+            apply()
+        }
+    }
+
+    private fun getUserTokenFromSP(){
+        userToken = sharedPreferences.getString("UserToken", null).toString()
+    }
+
+    private fun getUserIDFromToken(): String{
+        return userToken?.let { decodeJwt(it)?.getClaim("UserID")?.asString().toString() }.toString()
     }
 
 }
