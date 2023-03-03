@@ -29,7 +29,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
     var _uiState = mutableStateOf(GameUiState())
         private set
 
-    val apiService = UserNetwork.retrofit
+    private val apiService = UserNetwork.retrofit
     var userToken: String = ""
 
     private var synchronize = false
@@ -68,22 +68,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
     }
 
-    fun setLeaderBoard(language: Int){
-        _uiState.value = _uiState.value.copy(leaderBoardLanguage = language)
-    }
-
-    private fun createLeaderBoard(){
-        viewModelScope.launch {
-            leaderBoard = apiService.getLeaders()
-            setTab(4)
-        }
-    }
-
-    fun switchToLeaderBoard() {
-        createLeaderBoard()
-    }
-
-    suspend fun login(login: String, password: String){
+    private suspend fun login(login: String, password: String){
         viewModelScope.launch {
             val user = User(Login = login, Password = password)
             val respost = apiService.loginUser(user)
@@ -107,7 +92,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         setTab(2)
     }
 
-    suspend fun signup(login: String, password: String){
+    private suspend fun signup(login: String, password: String){
         viewModelScope.launch {
             val user = User(Login = login, Password = password)
             val respost = apiService.register(user)
@@ -139,26 +124,62 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    private fun createLeaderBoard(){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(creatingLeaderBoard = true)
+            try{
+                leaderBoard = apiService.getLeaders()
+                for(score in leaderBoard){
+                    viewModelScope.launch {
+                        score.UserID = apiService.getUserInfo(score.UserID).Login
+                    }.join()
+                }
+            }catch (e: Exception){
+                Log.d("EEE", "$e" )
+            }
+            _uiState.value = _uiState.value.copy(creatingLeaderBoard = false)
+        }
+    }
+
+
     @JvmName("getLeaderBoard1")
     fun getLeaderBoard(): List<ScoreCell>? {
         return leaderBoard.filter { s -> s.Language == _uiState.value.leaderBoardLanguage }
     }
 
-    fun getUserHistory(): List<ScoreCell>? {
-//        var userHistory: List<ScoreCell>
-//        viewModelScope.launch {
-//            viewModelScope.launch {
-//                userHistory = apiService.getUserHistory(getUserIDFromToken())
-//            }.join()
-//        }
 
-        val userID = getUserIDFromToken()
-        return leaderBoard.filter { s -> s.UserID == userID}
+    fun getUserHistory(){
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(creatingLeaderBoard = true)
+            val userID = getUserIDFromToken()
+            viewModelScope.launch {
+                try{
+                    val board = apiService.getUserHistory(userID)
+                    _uiState.value = _uiState.value.copy(userHistory = board)
+                }catch (e: Exception){
+                    _uiState.value = _uiState.value.copy(userHistory = null)
+                    Log.d("EEE", "$e" )
+                }
+            }.join()
+            _uiState.value = _uiState.value.copy(creatingLeaderBoard = false)
+        }
+    }
+
+    fun setLeaderBoard(language: Int){
+        _uiState.value = _uiState.value.copy(leaderBoardLanguage = language)
+    }
+
+    fun switchToLeaderBoard() {
+        setTab(4)
+        createLeaderBoard()
     }
 
     fun setTab(index: Int){
         if (index == 1)
             restartGame()
+
+        if(index==3)
+            getUserHistory()
 
         if (userToken != "" && index == 2){
             setTab(3)

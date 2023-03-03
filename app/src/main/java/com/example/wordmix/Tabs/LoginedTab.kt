@@ -73,22 +73,32 @@ fun LoginedTab(
                     .fillMaxWidth()
                     .fillMaxHeight(0.85f),
             ){
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .weight(1f, false)
-                        .fillMaxSize()
-                ) {
-                    val board = viewModel.getUserHistory()
-                    if (board != null) {
-                        for((n, cell) in board.withIndex()){
-                            cell.let {
-                                HistoryScoreCell(
-                                    index = n+1,
-                                    cell = it,
-                                    laguageText = viewModel.languageText(it.Language))
+                if (gameUiState.creatingLeaderBoard){
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        CircularProgressIndicator()
+                    }
+                }else{
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .weight(1f, false)
+                            .fillMaxSize()
+                    ) {
+                        val board = gameUiState.userHistory
+                        if (board != null) {
+                            for((n, cell) in board.withIndex()){
+                                cell.let {
+                                    HistoryScoreCell(
+                                        index = n+1,
+                                        cell = it,
+                                        laguageText = viewModel.languageText(it.Language))
+                                }
+                                Divider()
                             }
-                            Divider()
                         }
                     }
                 }

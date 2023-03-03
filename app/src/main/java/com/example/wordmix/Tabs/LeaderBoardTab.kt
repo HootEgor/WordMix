@@ -17,9 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import com.example.android.unscramble.ui.CustomFloatingButton
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.GameUiState
+import kotlinx.coroutines.launch
 
 @Composable
 fun LeaderBoardTab(
@@ -79,26 +81,34 @@ fun LeaderBoardTab(
                     .fillMaxWidth()
                     .fillMaxHeight(0.85f),
             ){
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .weight(1f, false)
-                        .fillMaxSize()
-                ) {
-                    //TODO CircularProgressIndicator()
-                    val board = viewModel.getLeaderBoard()
-                    if (board != null) {
-                        for((n, cell) in board.withIndex()){
-                            //Log.d("EEE", "$cell")
-                            ScoreCell(
-                                index = n+1,
-                                userName = cell.UserID,
-                                score = cell.Score.toString()
-                            )
-                            Divider()
+                if (gameUiState.creatingLeaderBoard){
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        CircularProgressIndicator()
+                    }
+                }else{
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .weight(1f, false)
+                            .fillMaxSize(),
+                    ) {
+                        val board = viewModel.getLeaderBoard()
+                        if (board != null) {
+                            for((n, cell) in board.withIndex()){
+                                //Log.d("EEE", "$cell")
+                                ScoreCell(
+                                    index = n+1,
+                                    userName = cell.UserID,
+                                    score = cell.Score.toString()
+                                )
+                                Divider()
+                            }
                         }
                     }
-
                 }
             }
 
