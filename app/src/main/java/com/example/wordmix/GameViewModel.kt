@@ -189,6 +189,23 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
     }
 
+    fun finishGame(){
+        setTab(0)
+        setFinishDailog(false)
+        if(userToken != "" && score > 0){
+            try{
+                val scoreCell = ScoreCell(_uiState.value.language,score,getUserIDFromToken())
+                viewModelScope.launch {
+                    apiService.saveScore(scoreCell)
+                }
+            }catch (e: Exception){
+                Log.d("EEE", "$e" )
+            }
+        }
+
+
+    }
+
     fun restartGame() {
 
         score = 0
@@ -229,6 +246,10 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(showWinDialog = set)
     }
 
+    fun setFinishDailog(set: Boolean){
+        _uiState.value = _uiState.value.copy(showFinishDialog = set)
+    }
+
     fun enableNextButton():Boolean{
         if (guessedWordsNumber() >= words.size/3)
             return true
@@ -241,6 +262,12 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         bonus = guessedWordsNumber().toFloat().pow(2).toInt()
         bonus = bonus*point/10
         text+= bonus.toString()
+        return text
+    }
+
+    fun finishDialogText(): String{
+        var text = "Ваш результат: "
+        text+= score.toString()
         return text
     }
 

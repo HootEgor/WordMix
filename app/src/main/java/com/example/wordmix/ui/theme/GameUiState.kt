@@ -11,6 +11,7 @@ data class GameUiState(
     val pressedCounter: Int = 0,
     var editMode: Boolean = false,
     var showWinDialog: Boolean = false,
+    var showFinishDialog: Boolean = false,
     var language: Int = 0,
     var leaderBoardLanguage: Int = 0,
     var tab: Int = 0,

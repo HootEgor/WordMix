@@ -16,12 +16,17 @@ interface UserAPI {
     @GET("user/{id}")
     suspend fun getUserInfo(@Path("id") userId: String): User
 
-    @GET("score/leaders")
-    suspend fun getLeaders(): ArrayList<ScoreCell>
-
     @POST("auth/register")
     suspend fun register(@Body user: User): Response<String>
 
     @POST("auth/login")
     suspend fun loginUser(@Body user: User): Response<String>
+
+    @GET("score/leaders")
+    suspend fun getLeaders(): ArrayList<ScoreCell>
+
+    @POST("score")
+    suspend fun saveScore(@Body score: ScoreCell): Response<ResponseBody>
+
+
 }

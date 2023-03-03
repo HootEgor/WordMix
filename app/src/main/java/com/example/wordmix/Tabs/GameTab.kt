@@ -98,8 +98,8 @@ fun GameTab(
                 text = "Відміна",
                 press = { viewModel.editMode()})
             CustomButton(enable = true,
-                text = "Назад",
-                press = { viewModel.setTab(0)})
+                text = "Кінець",
+                press = { viewModel.setFinishDailog(true)})
 
         }
 
@@ -110,6 +110,12 @@ fun GameTab(
         WinDialog(text = viewModel.winDialogText(),
             setState = {viewModel.setWinDailog(false)},
             nextRound = { viewModel.nextRound() })
+    }
+
+    if(gameUiState.showFinishDialog){
+        FinishDialog(text = viewModel.finishDialogText(),
+            setState = {viewModel.setFinishDailog(false)},
+            finish = { viewModel.finishGame()})
     }
 
     if(gameUiState.editMode){
@@ -196,6 +202,41 @@ fun WinDialog(
                     onClick = nextRound,
                     shape = RoundedCornerShape(100)) {
                     Text("Наступний раунд")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = setState,
+                    shape = RoundedCornerShape(100)) {
+                    Text("Назад")
+                }
+            }
+        )
+
+    }
+}
+
+@Composable
+fun FinishDialog(
+    text: String,
+    setState: () -> Unit,
+    finish: ()->Unit
+) {
+    MaterialTheme {
+        AlertDialog(
+            onDismissRequest = setState,
+            shape = MaterialTheme.shapes.small,
+            title = {
+                Text("Завершити гру?")
+            },
+            text = {
+                Text(text = text)
+            },
+            confirmButton = {
+                Button(
+                    onClick = finish,
+                    shape = RoundedCornerShape(100)) {
+                    Text("Завершити")
                 }
             },
             dismissButton = {
