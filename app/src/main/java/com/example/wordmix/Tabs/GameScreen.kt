@@ -48,6 +48,9 @@ fun GameScreen(
             LeaderBoardTab(viewModel = viewModel,
                 gameUiState = gameUiState)
         }
+        5 -> {
+            RegisterTab(viewModel = viewModel)
+        }
     }
 
     SystemUIColor(color = MaterialTheme.colors.primary)

@@ -27,7 +27,7 @@ import com.example.wordmix.GameViewModel
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun LoginTab(
+fun RegisterTab(
     modifier: Modifier = Modifier,
     viewModel: GameViewModel,
 ) {
@@ -43,9 +43,9 @@ fun LoginTab(
         },
         floatingActionButton = {
             CustomFloatingButton(
-            press = {viewModel.setTab(0)},
-            size = 60,
-            icon = Icons.Default.Home)
+                press = {viewModel.setTab(0)},
+                size = 60,
+                icon = Icons.Default.Home)
         },
         isFloatingActionButtonDocked = true,
         floatingActionButtonPosition = FabPosition.Center
@@ -59,11 +59,11 @@ fun LoginTab(
 
         Box(modifier = Modifier.fillMaxSize()) {
             ClickableText(
-                text = AnnotatedString("Signup Here"),
+                text = AnnotatedString("Login Here"),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(20.dp),
-                onClick = {viewModel.setTab(5)},
+                onClick = {viewModel.setTab(2)},
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontFamily = FontFamily.Default,
@@ -79,7 +79,7 @@ fun LoginTab(
         ) {
 
             Text(
-                text = "Login",
+                text = "Signup",
                 style = TextStyle(fontSize = 40.sp, fontFamily = FontFamily.Cursive)
             )
 
@@ -104,13 +104,13 @@ fun LoginTab(
 
             Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
                 Button(
-                    onClick = {viewModel.loginUser(username.value.text,password.value.text)},
+                    onClick = {viewModel.signupUser(username.value.text,password.value.text)},
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text(text = "Login")
+                    Text(text = "Signup")
                 }
             }
 

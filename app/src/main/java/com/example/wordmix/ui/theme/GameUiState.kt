@@ -13,9 +13,6 @@ data class GameUiState(
     var showWinDialog: Boolean = false,
     var language: Int = 0,
     var leaderBoardLanguage: Int = 0,
-    var tab: Int = 0,
-    var loginUser: User? = null,
-    var userHistory: ArrayList<ScoreCell>? = null,
-
+    var tab: Int = 0
     )
 

@@ -79,14 +79,12 @@ fun LoginedTab(
                         .weight(1f, false)
                         .fillMaxSize()
                 ) {
-
-                    if(gameUiState.userHistory != null){
-                        var n = 0
-                        for(cell in gameUiState.userHistory!!){
-                            n++
+                    val board = viewModel.getUserHistory()
+                    if (board != null) {
+                        for((n, cell) in board.withIndex()){
                             cell.let {
                                 HistoryScoreCell(
-                                    index = n,
+                                    index = n+1,
                                     cell = it,
                                     laguageText = viewModel.languageText(it.Language))
                             }
@@ -107,6 +105,7 @@ fun HistoryScoreCell(
 ){
     val color = Color.LightGray
     val rowHeight = 50.dp
+    val roundedValue = 0.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,7 +113,7 @@ fun HistoryScoreCell(
     ){
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .width(rowHeight)
@@ -128,7 +127,7 @@ fun HistoryScoreCell(
 
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(0.5f),
@@ -142,7 +141,7 @@ fun HistoryScoreCell(
 
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(),

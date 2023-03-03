@@ -87,14 +87,16 @@ fun LeaderBoardTab(
                 ) {
                     //TODO CircularProgressIndicator()
                     val board = viewModel.getLeaderBoard()
-                    for((n, cell) in board.withIndex()){
-                        //Log.d("EEE", "$cell")
-                        ScoreCell(
-                            index = n+1,
-                            userName = cell.UserID,
-                            score = cell.Score.toString()
-                        )
-                        Divider()
+                    if (board != null) {
+                        for((n, cell) in board.withIndex()){
+                            //Log.d("EEE", "$cell")
+                            ScoreCell(
+                                index = n+1,
+                                userName = cell.UserID,
+                                score = cell.Score.toString()
+                            )
+                            Divider()
+                        }
                     }
 
                 }
@@ -134,6 +136,7 @@ fun ScoreCell(
 ){
     val color = Color.LightGray
     val rowHeight = 50.dp
+    val roundedValue = 0.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,7 +144,7 @@ fun ScoreCell(
     ){
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .width(rowHeight)
@@ -155,7 +158,7 @@ fun ScoreCell(
 
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(0.5f),
@@ -169,7 +172,7 @@ fun ScoreCell(
 
         Surface(
             color= color,
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(roundedValue),
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(),

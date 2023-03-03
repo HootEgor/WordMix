@@ -64,59 +64,9 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
 
     init {
-        try{
-            authUser()
-        }catch (e: Exception){
-            Log.d("EEE", "$e" )
-        }
+        authUser()
 
     }
-
-    fun test(){
-        viewModelScope.launch {
-            val apiService = UserNetwork.retrofit
-
-            leaderBoard = apiService.getLeaders()
-
-            //Log.d("EEE", "$leaderBoard" )
-        }
-    }
-
-    suspend fun login(login: String, password: String){
-
-        viewModelScope.launch {
-            val user = User(Login = login, Password = password)
-            val respost = apiService.loginUser(user)
-            if(respost.code() == 200){
-                userToken = respost.body().toString()
-                saveUserTokenToSP(userToken)
-                _uiState.value = _uiState.value.copy(loginUser = user)
-            }
-        }.join()
-    }
-
-    fun authUser(){
-        viewModelScope.launch {
-            getUserTokenFromSP()
-            try{
-                val userID = getUserIDFromToken()
-                val user = apiService.getUserInfo(userID)
-                login(user.Login, user.Password)
-            }catch (e: Exception){
-                Log.d("EEE", "$e" )
-            }
-        }
-
-    }
-
-    fun decodeJwt(token: String): DecodedJWT? {
-        return try {
-            JWT.decode(token)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
 
     fun setLeaderBoard(language: Int){
         _uiState.value = _uiState.value.copy(leaderBoardLanguage = language)
@@ -133,6 +83,17 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         createLeaderBoard()
     }
 
+    suspend fun login(login: String, password: String){
+        viewModelScope.launch {
+            val user = User(Login = login, Password = password)
+            val respost = apiService.loginUser(user)
+            if(respost.code() == 200){
+                userToken = respost.body().toString()
+                saveUserTokenToSP(userToken)
+            }
+        }.join()
+    }
+
     fun loginUser(login: String, password: String){
         viewModelScope.launch {
             login(login,password)
@@ -142,13 +103,69 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
     fun logoutUser(){
         userToken = ""
-        saveUserTokenToSP("")
+        saveUserTokenToSP(userToken)
         setTab(2)
     }
 
+    suspend fun signup(login: String, password: String){
+        viewModelScope.launch {
+            val user = User(Login = login, Password = password)
+            val respost = apiService.register(user)
+            if(respost.code() == 200){
+                userToken = respost.body().toString()
+                saveUserTokenToSP(userToken)
+            }
+        }.join()
+    }
+
+    fun signupUser(login: String, password: String){
+        viewModelScope.launch {
+            signup(login,password)
+            setTab(2)
+        }
+    }
+
+    private fun authUser(){
+        viewModelScope.launch {
+            getUserTokenFromSP()
+            try{
+                val userID = getUserIDFromToken()
+                val user = apiService.getUserInfo(userID)
+                login(user.Login, user.Password)
+            }catch (e: Exception){
+                userToken = ""
+                Log.d("EEE", "$e" )
+            }
+        }
+    }
+
     @JvmName("getLeaderBoard1")
-    fun getLeaderBoard(): List<ScoreCell> {
+    fun getLeaderBoard(): List<ScoreCell>? {
         return leaderBoard.filter { s -> s.Language == _uiState.value.leaderBoardLanguage }
+    }
+
+    fun getUserHistory(): List<ScoreCell>? {
+//        var userHistory: List<ScoreCell>
+//        viewModelScope.launch {
+//            viewModelScope.launch {
+//                userHistory = apiService.getUserHistory(getUserIDFromToken())
+//            }.join()
+//        }
+
+        val userID = getUserIDFromToken()
+        return leaderBoard.filter { s -> s.UserID == userID}
+    }
+
+    fun setTab(index: Int){
+        if (index == 1)
+            restartGame()
+
+        if (userToken != "" && index == 2){
+            setTab(3)
+        }else{
+            _uiState.value = _uiState.value.copy(tab = index)
+        }
+
     }
 
     fun restartGame() {
@@ -206,24 +223,6 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         return text
     }
 
-    fun setTab(index: Int){
-        if (index == 1)
-            restartGame()
-
-        if (userToken != "" && index == 2){
-            viewModelScope.launch {
-                viewModelScope.launch {
-                    val userHistory = apiService.getUserHistory(getUserIDFromToken())
-                    _uiState.value = _uiState.value.copy(userHistory = userHistory)
-                }
-                setTab(3)
-            }
-        }else{
-            _uiState.value = _uiState.value.copy(tab = index)
-        }
-
-    }
-
     fun setLanguage(index: Int){
         _uiState.value = _uiState.value.copy(language = index)
     }
@@ -270,13 +269,6 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         }
 
         return text
-    }
-
-    fun setLanguageButtonBoarder(language: Int): Boolean{
-        if(language == _uiState.value.leaderBoardLanguage)
-            return true
-
-        return false
     }
 
     fun unBlockWord(){
@@ -714,6 +706,14 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         with(sharedPreferences.edit()) {
             putString("UserToken", token)
             apply()
+        }
+    }
+
+    fun decodeJwt(token: String): DecodedJWT? {
+        return try {
+            JWT.decode(token)
+        } catch (e: Exception) {
+            null
         }
     }
 

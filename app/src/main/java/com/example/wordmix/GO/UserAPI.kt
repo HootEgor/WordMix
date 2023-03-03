@@ -12,11 +12,15 @@ import retrofit2.http.Path
 interface UserAPI {
     @GET("user/score/{id}")
     suspend fun getUserHistory(@Path("id") userId: String): ArrayList<ScoreCell>
+
     @GET("user/{id}")
     suspend fun getUserInfo(@Path("id") userId: String): User
 
     @GET("score/leaders")
     suspend fun getLeaders(): ArrayList<ScoreCell>
+
+    @POST("auth/register")
+    suspend fun register(@Body user: User): Response<String>
 
     @POST("auth/login")
     suspend fun loginUser(@Body user: User): Response<String>
