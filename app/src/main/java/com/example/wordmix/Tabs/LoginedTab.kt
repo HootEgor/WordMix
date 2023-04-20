@@ -1,7 +1,10 @@
 package com.example.wordmix.Tabs
 
 import android.annotation.SuppressLint
+import android.media.Image
+import android.os.Build
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
@@ -9,22 +12,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import com.example.android.unscramble.ui.CustomFloatingButton
 import com.example.wordmix.GameViewModel
+import com.example.wordmix.R
 import com.example.wordmix.ui.theme.GameUiState
 import com.example.wordmix.ui.theme.ScoreCell
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.tooling.preview.Preview
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -33,13 +42,14 @@ fun LoginedTab(
     viewModel: GameViewModel,
     gameUiState: GameUiState
 ) {
+
     Scaffold(
         topBar = {
             TopAppBar{
                 CustomFloatingButton(
                     press = {viewModel.logoutUser()},
                     size = 50,
-                    icon = Icons.Default.ExitToApp)
+                    icon = Icons.Filled.ExitToApp)//imageResource(id = R.drawable.baseline_logout_24))
             }
         },
         bottomBar = {
@@ -106,6 +116,8 @@ fun LoginedTab(
         }
     }
 }
+
+
 
 @Composable
 fun HistoryScoreCell(

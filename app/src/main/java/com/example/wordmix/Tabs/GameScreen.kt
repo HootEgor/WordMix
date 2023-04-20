@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.Tabs.*
+import com.example.wordmix.ui.theme.WordMixTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
@@ -28,32 +29,33 @@ fun GameScreen(
 ) {
 
     val gameUiState by viewModel._uiState
-
-    when(gameUiState.tab){
-        0 -> {
-            HomeTab(viewModel = viewModel)
-        }
-        1 -> {
-            GameTab(viewModel = viewModel,
+    WordMixTheme(darkTheme = false){
+        when(gameUiState.tab){
+            0 -> {
+                HomeTab(viewModel = viewModel)
+            }
+            1 -> {
+                GameTab(viewModel = viewModel,
+                        gameUiState = gameUiState)
+            }
+            2 -> {
+                LoginTab(viewModel = viewModel)
+            }
+            3 -> {
+                LoginedTab(viewModel = viewModel,
                     gameUiState = gameUiState)
+            }
+            4 -> {
+                LeaderBoardTab(viewModel = viewModel,
+                    gameUiState = gameUiState)
+            }
+            5 -> {
+                RegisterTab(viewModel = viewModel)
+            }
         }
-        2 -> {
-            LoginTab(viewModel = viewModel)
-        }
-        3 -> {
-            LoginedTab(viewModel = viewModel,
-                gameUiState = gameUiState)
-        }
-        4 -> {
-            LeaderBoardTab(viewModel = viewModel,
-                gameUiState = gameUiState)
-        }
-        5 -> {
-            RegisterTab(viewModel = viewModel)
-        }
-    }
 
-    SystemUIColor(color = MaterialTheme.colors.primary)
+        SystemUIColor(color = MaterialTheme.colors.primary)
+    }
 }
 
 @Composable
@@ -83,7 +85,6 @@ fun CustomFloatingButton(
     size: Int,
     icon: ImageVector
 ){
-
     FloatingActionButton(
         onClick = press,
         modifier = Modifier.size(size.dp),

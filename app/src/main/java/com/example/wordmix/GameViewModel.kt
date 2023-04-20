@@ -65,7 +65,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
 
     init {
         authUser()
-
+        getAllWords()
     }
 
     private suspend fun login(login: String, password: String){
@@ -138,6 +138,7 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
                 Log.d("EEE", "$e" )
             }
             _uiState.value = _uiState.value.copy(creatingLeaderBoard = false)
+
         }
     }
 
@@ -163,6 +164,46 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
             }.join()
             _uiState.value = _uiState.value.copy(creatingLeaderBoard = false)
         }
+    }
+
+    fun getAllWords(){
+        viewModelScope.launch {
+            var newWords: List<Word> = ArrayList()
+            viewModelScope.launch {
+                try{
+                newWords = apiService.getAllWords()
+                }
+                catch (e: Exception){
+                    Log.d("EEE", "$e" )
+                }
+            }.join()
+
+            if(newWords.isNotEmpty()){
+                val ukrWords: ArrayList<String> = ArrayList()
+                val engWords: ArrayList<String> = ArrayList()
+                val spWords: ArrayList<String> = ArrayList()
+
+                viewModelScope.launch {
+                    for (word in newWords){
+                        when(word.Language){
+                            0 -> ukrWords.add(word.Word)
+                            1 -> engWords.add(word.Word)
+                            2 -> spWords.add(word.Word)
+                        }
+                    }
+                }.join()
+
+                allWords[0] = ukrWords
+                allWords[1] = engWords
+                allWords[2] = spWords
+
+                saveAllWordsToSP()
+            }
+            else{
+                getAllWordsFromSP()
+            }
+        }
+
     }
 
     fun setLeaderBoard(language: Int){
@@ -335,8 +376,6 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         editMode()
     }
 
-
-
     fun guessWord(){
         val word = stackWord()
         if(allWords[_uiState.value.language].contains(word)){
@@ -402,8 +441,6 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
         }
         return num
     }
-
-
 
     fun pressTile(tile: Tile) {
         if(synchronize)
@@ -755,6 +792,22 @@ class GameViewModel(application: Application): AndroidViewModel(application) {
             putString("UserToken", token)
             apply()
         }
+    }
+
+    private fun saveAllWordsToSP(){
+        with(sharedPreferences.edit()) {
+            putString("UkrWords", allWords[0].toString())
+            putString("EngWords", allWords[1].toString())
+            putString("SpWords", allWords[2].toString())
+            apply()
+        }
+    }
+
+    private fun getAllWordsFromSP(){
+        allWords[0] = sharedPreferences.getString("UkrWords", null)?.split(", ")?.toMutableList() as java.util.ArrayList<String>
+        allWords[1] = sharedPreferences.getString("EngWords", null)?.split(", ")?.toMutableList() as java.util.ArrayList<String>
+        allWords[2] = sharedPreferences.getString("SpWords", null)?.split(", ")?.toMutableList() as java.util.ArrayList<String>
+        Log.d("EEE", "getAllWordsFromSP: ${allWords}")
     }
 
     fun decodeJwt(token: String): DecodedJWT? {

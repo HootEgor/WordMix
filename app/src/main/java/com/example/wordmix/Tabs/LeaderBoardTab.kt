@@ -1,7 +1,5 @@
 package com.example.wordmix.Tabs
 
-import android.util.Log
-import android.widget.ProgressBar
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,11 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import com.example.android.unscramble.ui.CustomFloatingButton
 import com.example.wordmix.GameViewModel
 import com.example.wordmix.ui.theme.GameUiState
-import kotlinx.coroutines.launch
 
 @Composable
 fun LeaderBoardTab(

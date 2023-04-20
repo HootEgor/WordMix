@@ -38,23 +38,6 @@ fun WordMixTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
         LightColorPalette
     }
 
-    val systemUiController = rememberSystemUiController()
-
-    SideEffect {
-        systemUiController.setNavigationBarColor(
-            color = Color.Magenta,
-            darkIcons = false
-        )
-
-        systemUiController.isNavigationBarVisible = false
-
-        // status bar
-        systemUiController.isStatusBarVisible = false
-
-        // system bars
-        systemUiController.isSystemBarsVisible = false
-    }
-
     MaterialTheme(
         colors = colors,
         typography = Typography,

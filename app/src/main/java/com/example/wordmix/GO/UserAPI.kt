@@ -1,8 +1,8 @@
 package com.example.wordmix.GO
 
 import com.example.wordmix.ui.theme.ScoreCell
+import com.example.wordmix.ui.theme.Word
 import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -27,6 +27,9 @@ interface UserAPI {
 
     @POST("score")
     suspend fun saveScore(@Body score: ScoreCell): Response<ResponseBody>
+
+    @GET("/word/get")
+    suspend fun getAllWords(): ArrayList<Word>
 
 
 }
